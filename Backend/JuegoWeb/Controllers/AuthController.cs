@@ -88,7 +88,7 @@ public class AuthController : ControllerBase
 
     // SIGN UP CREAR NUEVO USUARIO
     [HttpPost("Signup")]
-    public async Task<ActionResult<RegisterDto>> SignUp([FromBody] RegisterDto model)
+    public async Task<ActionResult<RegisterDto>> SignUp([FromForm] RegisterDto model)
     {
 
         if (!ModelState.IsValid)
@@ -107,10 +107,12 @@ public class AuthController : ControllerBase
             return Conflict("El correo electrónico ya está en uso.");
         }
 
+        
         if (existingUserNickname != null)
         {
             return Conflict("El nickname ya está en uso.");
         }
+        
 
         var newUser = await _userService.RegisterAsync(model);
 
