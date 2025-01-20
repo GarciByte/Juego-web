@@ -24,7 +24,7 @@ export class SignupComponent implements OnInit {
     private router: Router
   ) {
     this.myForm = this.formBuilder.group({
-      avatar: ['', Validators.required],
+      avatar: [''],
       nickname: ['', [Validators.required, Validators.pattern(/^[^@]*$/)]], // No se permite el carácter @
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],

@@ -100,6 +100,12 @@ public class UserService
             File = model.Avatar
         });
 
+        // Imagen de avatar por defecto si no se seleccionó ninguno
+        if (avatar == null)
+        {
+            avatar = new Image { Name = model.Nickname + "_avatar" + "_default", Path = "avatars/avatar.png" };
+        }
+
         var newUser = new User
         {
             Nickname = model.Nickname,

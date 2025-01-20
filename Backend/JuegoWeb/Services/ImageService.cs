@@ -28,6 +28,11 @@ namespace JuegoWeb.Services
 
         public async Task<Image> InsertImageAsync(CreateUpdateImageRequest image)
         {
+            if (image.File == null)
+            {
+                return null;
+            }
+
             string relativePath = $"{IMAGES_FOLDER}/{Guid.NewGuid()}_{image.File.FileName}";
 
             Image newImage = new Image
