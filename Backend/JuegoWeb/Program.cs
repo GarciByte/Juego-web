@@ -1,9 +1,9 @@
-﻿
+﻿using JuegoWeb.Middlewares;
 using JuegoWeb.Models.Database;
 using JuegoWeb.Models.Database.Repositories.Implementations;
 using JuegoWeb.Models.Mappers;
 using JuegoWeb.Services;
-using Microsoft.AspNetCore.Cors.Infrastructure;
+using JuegoWeb.WebSocketAdvanced;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -17,8 +17,11 @@ namespace JuegoWeb
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Configuracion directorio
+            // Configuración del directorio
             Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
+            // Leer la configuración
+            builder.Services.Configure<Settings>(builder.Configuration.GetSection(Settings.SECTION_NAME));
 
             // Inyectamos el DbContext
             builder.Services.AddScoped<JuegoWebContext>();
@@ -27,14 +30,21 @@ namespace JuegoWeb
             // Inyección de todos los repositorios
             builder.Services.AddScoped<UserRepository>();
             builder.Services.AddScoped<ImageRepository>();
+            builder.Services.AddScoped<FriendRequestRepository>();
+            builder.Services.AddScoped<UserFriendRepository>();
 
             // Inyección de Mappers
             builder.Services.AddScoped<UserMapper>();
             builder.Services.AddScoped<ImageMapper>();
+            builder.Services.AddScoped<FriendRequestMapper>();
 
             // Inyección de Servicios
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<ImageService>();
+            builder.Services.AddScoped<FriendRequestService>();
+            builder.Services.AddSingleton<WebSocketNetwork>();
+            builder.Services.AddSingleton<IWebSocketMessageSender, WebSocketNetwork>();
+            builder.Services.AddSingleton<WebSocketNotificationService>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -51,17 +61,19 @@ namespace JuegoWeb
                 });
             });
 
+            // Añadir controladores
             builder.Services.AddControllers();
             builder.Services.AddControllers().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
 
-            // Configuración de autenticaci�n
+            // Configuración de autenticación
             builder.Services.AddAuthentication()
                 .AddJwtBearer(options =>
                 {
-                    string key = "A8$wX#pQ3dZ7v&kB1nY!rT@9mL%j6sHf4^g2Uc5*o";
+                    Settings settings = builder.Configuration.GetSection(Settings.SECTION_NAME).Get<Settings>();
+                    string key = settings.JwtKey;
 
                     options.TokenValidationParameters = new TokenValidationParameters()
                     {
@@ -90,10 +102,22 @@ namespace JuegoWeb
                         Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"))
             });
 
-            app.UseAuthentication();
-            app.UseAuthorization();
+            // Habilita el uso de websockets
+            app.UseWebSockets();
+
+            // Middleware que convierte CONNECT a GET
+            app.UseMiddleware<WebSocketGetMiddleware>();
+
+            // Middleware que agrega el JWT al encabezado de autorización
+            app.UseMiddleware<WebSocketTokenMiddleware>();
 
             app.UseHttpsRedirection();
+
+            app.UseRouting();
+
+            app.UseAuthentication();
+
+            app.UseAuthorization();
 
             app.MapControllers();
 
@@ -115,9 +139,5 @@ namespace JuegoWeb
                 await seeder.SeedAsync();
             }
         }
-
     }
-
 }
-
-

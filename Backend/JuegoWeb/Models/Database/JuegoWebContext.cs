@@ -3,10 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JuegoWeb.Models.Database;
 
-
 public class JuegoWebContext : DbContext
 {
-
     private const string DATABASE_PATH = "JuegoWeb.db";
 
     // Tablas
@@ -14,13 +12,14 @@ public class JuegoWebContext : DbContext
 
     public DbSet<User> User { get; set; }
 
+    public DbSet<FriendRequest> FriendRequest { get; set; }
+
+    public DbSet<UserFriend> UserFriends { get; set; }
 
     // Crear archivo SQLite
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         string basedir = AppDomain.CurrentDomain.BaseDirectory;
-
         optionsBuilder.UseSqlite($"DataSource={basedir}{DATABASE_PATH}");
-
     }
 }

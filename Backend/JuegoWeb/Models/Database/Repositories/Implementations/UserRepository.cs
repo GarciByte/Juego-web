@@ -35,10 +35,7 @@ public class UserRepository : Repository<User, int>
     public async Task<User> InsertUserAsync(User newUser)
     {
         await base.InsertAsync(newUser);
-
         return newUser;
-
-        throw new Exception("No se pudo crear el nuevo usuario.");
     }
 
     // Obtener todos los usuarios
@@ -52,7 +49,6 @@ public class UserRepository : Repository<User, int>
     // Eliminar usuario
     public void DeleteUser(User user)
     {
-        _context.Set<User>().Remove(user);
+        base.Delete(user);
     }
-
 }

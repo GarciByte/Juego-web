@@ -1,6 +1,13 @@
-﻿using JuegoWeb.Models.Database.Entities;
+﻿using System.Text.Json.Serialization;
 
 namespace JuegoWeb.Models.Dtos;
+
+public enum UserStatus
+{
+    Online,
+    Offline,
+    Playing
+}
 
 public class UserDto
 {
@@ -13,4 +20,7 @@ public class UserDto
     public ImageDto Avatar { get; set; } = null!;
 
     public string Role { get; set; } = null!;
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public UserStatus Status { get; set; }
 }

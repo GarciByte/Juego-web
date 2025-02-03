@@ -52,5 +52,3 @@ public abstract class Repository<TEntity, TId> : IRepository<TEntity, TId> where
         return await GetByIdAsync(id) != null;
     }
 }
-
-

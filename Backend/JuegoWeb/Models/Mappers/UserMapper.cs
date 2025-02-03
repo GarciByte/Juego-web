@@ -20,13 +20,13 @@ public class UserMapper
             Nickname = user.Nickname,
             Email = user.Email,
             Avatar = user.Avatar != null ? _imageMapper.ToDto(user.Avatar, request) : null,
-            Role = user.Role
+            Role = user.Role,
+            Status = UserStatus.Offline,
         };
     }
 
-    public IEnumerable<UserDto> UsersToDto(IEnumerable<User> users, HttpRequest request)
+    public IEnumerable<UserDto> UsersToDto(IEnumerable<User> users, HttpRequest request = null)
     {
         return users.Select(user => UserToDto(user, request));
     }
-
 }

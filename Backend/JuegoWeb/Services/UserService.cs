@@ -4,7 +4,6 @@ using JuegoWeb.Models.Database.Entities;
 using JuegoWeb.Models.Dtos;
 using JuegoWeb.Models.Mappers;
 
-
 namespace JuegoWeb.Services;
 
 public class UserService
@@ -48,7 +47,7 @@ public class UserService
         return _userMapper.UserToDto(user, request);
     }
 
-    public async Task<UserDto> GetUserByIdAsync(int id, HttpRequest request)
+    public async Task<UserDto> GetUserByIdAsync(int id, HttpRequest request = null)
     {
         var user = await _unitOfWork.UserRepository.GetUserById(id);
 

@@ -1,6 +1,4 @@
-﻿using JuegoWeb.Models.Database.Entities;
-
-namespace JuegoWeb.Models.Dtos;
+﻿namespace JuegoWeb.Models.Dtos;
 
 public class RegisterDto
 {
@@ -11,5 +9,4 @@ public class RegisterDto
     public string Password { get; set; } = null!;
 
     public IFormFile Avatar { get; set; } = null!;
-
 }

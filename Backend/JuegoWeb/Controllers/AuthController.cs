@@ -9,7 +9,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-
 namespace JuegoWeb.Controllers;
 
 [Route("api/[controller]")]
@@ -36,7 +35,6 @@ public class AuthController : ControllerBase
         {
             // Se usa el método LoginAsync para verificar el usuario y la contraseña
             var user = await _userService.LoginAsync(model.Email, model.Nickname, model.Password);
-
 
             // Si el usuario es null, se devuelve Unauthorized
             if (user == null)
@@ -85,12 +83,10 @@ public class AuthController : ControllerBase
         }
     }
 
-
     // SIGN UP CREAR NUEVO USUARIO
     [HttpPost("Signup")]
     public async Task<ActionResult<RegisterDto>> SignUp([FromForm] RegisterDto model)
     {
-
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
@@ -107,12 +103,10 @@ public class AuthController : ControllerBase
             return Conflict("El correo electrónico ya está en uso.");
         }
 
-        
         if (existingUserNickname != null)
         {
             return Conflict("El nickname ya está en uso.");
         }
-        
 
         var newUser = await _userService.RegisterAsync(model);
 

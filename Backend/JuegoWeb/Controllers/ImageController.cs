@@ -54,5 +54,4 @@ public class ImagesController : ControllerBase
 
         return Ok(_imageMapper.ToDto(imageUpdated));
     }
-
 }
