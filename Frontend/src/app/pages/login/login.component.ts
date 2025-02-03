@@ -25,10 +25,10 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private authService: AuthService,
+    private authService: AuthService
   ) { }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['/menu']);
     }
@@ -65,8 +65,9 @@ export class LoginComponent implements OnInit {
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
-        didClose: () => this.router.navigate(['/menu'])
       });
+
+      this.router.navigate(['/menu'])
 
     } else {
       console.error(result.error);

@@ -1,10 +1,76 @@
-<p>Menú</p>
+<div class="menu-container">
 
-<div>
-  <p>Nickname: {{ user.nickname }}</p>
-  <p>Email: {{ user.email }}</p>
-  <p>Avatar: <img src="{{ avatarUrl }}" alt="Avatar del usuario"></p>
-  <p>Role: {{ user.role }}</p>
+  <div class="nav-container">
+    <img [src]="avatarUrl" alt="Avatar del usuario">
+    <p>{{ user.nickname }}</p>
+
+    <button class="btn-nav" [routerLink]="['/user-profile']">Mi perfil</button>
+    <button class="btn-nav" (click)="logout()">Cerrar sesión</button>
+  </div>
+
+  <button class="btn-play" [routerLink]="['/matchmaking']">🎮 Jugar</button>
+
+  <div class="stats-container">
+    <p>👥 Jugadores en línea: {{ totalPlayers }}</p>
+    <p>🎮 Partidas activas: {{ activeGames }}</p>
+    <p>🕹️ Jugadores en partida: {{ playersInGames }}</p>
+  </div>
+
+  <div class="friends-requests-container">
+
+    <div class="friends-list">
+      <h2>👥 Amigos</h2>
+
+      <div class="search-bar">
+        <input type="text" [(ngModel)]="searchText" placeholder="Buscar amigo...">
+        <button class="btn-secondary" (click)="filterFriends()">Buscar</button>
+      </div>
+
+      <div *ngFor="let friend of filteredFriends" class="friend-card" (click)="navigateToProfile(friend.userId)">
+        <div class="friend-info">
+          <img [src]="IMG_URL + friend.avatar.url" alt="Avatar del amigo">
+          <p>{{ friend.nickname }}</p>
+        </div>
+        <div class="friend-actions">
+          <p>Estado: {{ friend.status }}</p>
+          <button class="btn-danger" (click)="deletefriend(friend); $event.stopPropagation()">
+            🗑️ Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="users-requests-container">
+
+      <div class="search-users">
+        <h2>🔍 Buscar Usuarios</h2>
+        <div class="search-bar">
+          <input type="text" [(ngModel)]="searchQuery" placeholder="Buscar usuario...">
+          <button class="btn-secondary" (click)="filterUsers()">Buscar</button>
+        </div>
+
+        <ul>
+          <li *ngFor="let user of filteredUsers">
+            <span class="user-nickname">{{ user.nickname }}</span>
+            <button class="btn-tertiary" (click)="sendFriendRequest(user)">
+              Enviar solicitud
+            </button>
+            <button class="btn-tertiary" (click)="navigateToProfile(user.userId)">Ver perfil</button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="friend-requests">
+        <h2>📩 Solicitudes de Amistad</h2>
+        <ul>
+          <li *ngFor="let request of friendRequests">
+            <span>{{ request.senderNickname }}</span>
+            <button class="btn-primary" (click)="acceptFriendRequest(request)">Aceptar</button>
+            <button class="btn-danger" (click)="rejectFriendRequest(request)">Rechazar</button>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
 </div>
-
-<p><a (click)="logout()">Cerrar sesión</a></p>

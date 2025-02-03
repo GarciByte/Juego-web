@@ -4,6 +4,7 @@ import { AuthResponse } from "../models/auth-response";
 import { Result } from "../models/result";
 import { User } from "../models/user";
 import { ApiService } from "./api.service";
+import { WebsocketService } from "./websocket.service";
 
 
 @Injectable({
@@ -13,11 +14,22 @@ export class AuthService {
 
   private readonly USER_KEY = 'user';
   private readonly TOKEN_KEY = 'jwtToken';
+  token: string = null;
 
-  constructor(private api: ApiService) {
+  constructor(private api: ApiService, private webSocketService: WebsocketService) {
+    this.init();
+  }
+
+  // Login si se recuerda la sesión
+  private async init() {
     const token = localStorage.getItem(this.TOKEN_KEY) || sessionStorage.getItem(this.TOKEN_KEY);
     if (token) {
+      this.token = token;
       this.api.jwt = token;
+
+      console.log("Empieza la conexión con el WebSocket con una sesión recordada...");
+      await this.connectWebSocket();
+      console.log("WebSocket conectado desde sesión recordada.");
     }
   }
 
@@ -32,7 +44,9 @@ export class AuthService {
 
     if (result.success) {
       const { accessToken, user } = result.data;
+
       this.api.jwt = result.data.accessToken;
+      this.token = result.data.accessToken;
 
       if (rememberMe) {
         localStorage.setItem(this.TOKEN_KEY, accessToken);
@@ -41,9 +55,18 @@ export class AuthService {
         sessionStorage.setItem(this.TOKEN_KEY, accessToken);
         sessionStorage.setItem(this.USER_KEY, JSON.stringify(user));
       }
+
+      console.log("Empieza la conexión con el websocket...");
+      await this.connectWebSocket();
+      console.log("WebSocket conectado desde el inicio de sesión.");
     }
 
     return result;
+  }
+
+  // Conexión con el WebSocket
+  async connectWebSocket() {
+    return this.webSocketService.connectRxjs(this.token, this.isAuthenticated());
   }
 
   // Comprobar si el usuario está logeado
@@ -54,6 +77,7 @@ export class AuthService {
 
   // Cerrar sesión
   logout(): void {
+    this.webSocketService.disconnectRxjs();
     sessionStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.TOKEN_KEY);
     sessionStorage.removeItem(this.USER_KEY);

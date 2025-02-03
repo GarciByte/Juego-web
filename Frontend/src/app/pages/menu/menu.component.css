@@ -1,4 +1,187 @@
-img {
-    width: 150px;
-    height: auto;
+.menu-container {
+    max-width: 1200px;
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: #a4c6fa;
+    border-radius: 30px;
+}
+
+/* Barra de navegación */
+.nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    font-size: 22px;
+}
+
+.nav-container img {
+    height: 75px;
+    width: 75px;
+    border-radius: 50%;
+}
+
+.nav-container .btn-nav {
+    background-color: #007BFF;
+    color: white;
+    padding: 0.8rem 1.2rem;
+    border-radius: 10px;
+}
+
+/* Botón Jugar */
+.btn-play {
+    width: 100%;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    background: #d46770;
+    font-size: 1.4rem;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+/* Estadísticas */
+.stats-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    background: white;
+    border-radius: 15px;
+}
+
+.stats-container p {
+    padding: 1rem;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Contenedor de amigos y solicitudes */
+.friends-requests-container {
+    display: flex;
+    gap: 2rem;
+}
+
+/* Lista de amigos */
+.friends-list {
+    flex: 1;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+}
+
+/* Barra de búsqueda de la lista de amigos */
+.search-bar {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.search-bar input {
+    padding: 0.8rem;
+    border: 2px solid #ddd;
+    width: 100%;
+    border-radius: 15px;
+}
+
+/* Tarjeta de amigo */
+.friend-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background-color: #c4e3f7;
+    border: 1px solid #ddd;
+    margin-top: 0.8rem;
+    border-radius: 15px;
+}
+
+.friend-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.friend-info img {
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+}
+
+/* Contenedor de usuarios y solicitudes */
+.users-requests-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Búsqueda de usuarios */
+.search-users {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+}
+
+.search-users ul {
+    list-style: none;
+    padding: 0;
+}
+
+.search-users li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Solicitudes de amistad */
+.friend-requests {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+}
+
+.friend-requests ul {
+    list-style: none;
+    padding: 0;
+}
+
+.friend-requests li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Botones */
+button {
+    cursor: pointer;
+    border: none;
+    font-weight: bold;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+}
+
+.btn-primary {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #007BFF;
+    color: white;
+}
+
+.btn-tertiary {
+    background-color: #fa5927;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
 }

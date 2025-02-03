@@ -3,7 +3,6 @@ import { Injectable } from "@angular/core";
 import { Observable, lastValueFrom } from "rxjs";
 import { environment } from "../../environments/environment.development";
 import { Result } from "../models/result";
-import { User } from "../models/user";
 
 
 @Injectable({
@@ -102,23 +101,6 @@ export class ApiService {
       header['Content-Type'] = contentType;
 
     return new HttpHeaders(header);
-  }
-
-  async getUser(id: number): Promise<User> {
-    const request: Observable<Object> =
-      this.http.get(`${this.BASE_URL}User/${id}`);
-
-    const dataRaw: any = await lastValueFrom(request);
-
-    const user: User = {
-      userId: id,
-      nickname: dataRaw.nickname,
-      email: dataRaw.email,
-      avatar: dataRaw.avatar,
-      role: dataRaw.role
-
-    };
-    return user;
   }
 
 }
