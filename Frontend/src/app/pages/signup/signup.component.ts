@@ -89,9 +89,10 @@ export class SignupComponent implements OnInit {
             icon: 'success',
             showConfirmButton: false,
             timer: 3000,
-            timerProgressBar: true,
-            didClose: () => this.router.navigate(['/menu'])
+            timerProgressBar: true
           });
+
+          this.router.navigate(['/menu'])
 
         } else {
           this.throwError("Error en el inicio de sesión");

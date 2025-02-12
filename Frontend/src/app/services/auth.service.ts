@@ -27,7 +27,6 @@ export class AuthService {
       this.token = token;
       this.api.jwt = token;
 
-      console.log("Empieza la conexión con el WebSocket con una sesión recordada...");
       await this.connectWebSocket();
       console.log("WebSocket conectado desde sesión recordada.");
     }
@@ -56,7 +55,6 @@ export class AuthService {
         sessionStorage.setItem(this.USER_KEY, JSON.stringify(user));
       }
 
-      console.log("Empieza la conexión con el websocket...");
       await this.connectWebSocket();
       console.log("WebSocket conectado desde el inicio de sesión.");
     }

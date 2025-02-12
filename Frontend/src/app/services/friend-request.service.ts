@@ -1,7 +1,4 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment.development';
 import { FriendRequest } from '../models/friend-request';
 import { User } from '../models/user';
 import { ApiService } from './api.service';
@@ -28,7 +25,7 @@ export class FriendRequestService {
   async rejectRequest(requestId: number): Promise<Result<void>> {
     return this.api.post<void>(`FriendRequest/reject?requestId=${requestId}`);
   }
-  
+
   // Obtener solicitudes de amistad pendientes
   async getPendingRequests(userId: number): Promise<Result<FriendRequest[]>> {
     return this.api.get<FriendRequest[]>(`FriendRequest/pending?userId=${userId}`);

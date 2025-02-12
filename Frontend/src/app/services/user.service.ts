@@ -24,5 +24,4 @@ export class UserService {
   async getAllUsers(): Promise<Result<User[]>> {
     return this.api.get<User[]>(`User/allUsers`);
   }
-
 }

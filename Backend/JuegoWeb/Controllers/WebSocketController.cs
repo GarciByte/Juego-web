@@ -27,19 +27,24 @@ public class WebSocketController : ControllerBase
     [HttpGet]
     public async Task ConnectAsync()
     {
+        Console.WriteLine("WebSocketController fuera");
+
         // Si la petición es de tipo websocket la aceptamos
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
-            // Aceptamos la solicitud
-            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            Console.WriteLine("WebSocketController dentro");
 
             // Obtener id de usuario desde el Token
             UserDto user = await ReadToken();
 
             if (user == null)
             {
-                HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest; ;
+                HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+                Console.WriteLine("El usuario es null");
             }
+
+            // Aceptamos la solicitud
+            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
             // Obtener los amigos del usuario
             var friends = await _friendRequestService.GetFriendsAsync(user.UserId);

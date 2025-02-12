@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import Swal from 'sweetalert2';
-import { User, UserStatus } from '../../models/user';
+import { User } from '../../models/user';
 import { environment } from '../../../environments/environment.development';
 import { WebsocketService } from '../../services/websocket.service';
 import { Subscription } from 'rxjs';
@@ -10,9 +10,10 @@ import { FriendRequestService } from '../../services/friend-request.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FriendRequest } from '../../models/friend-request';
-import { GameStats } from '../../models/game-stats';
 import { UserService } from '../../services/user.service';
-import { WebSocketMessage } from '../../models/web-socket-message';
+import { GameInvitation } from '../../models/game-invitation';
+import { GameRoomAction, RoomAction } from '../../models/game-room-action';
+import { WebSocketMessage, MsgType } from '../../models/web-socket-message';
 
 @Component({
   selector: 'app-menu',
@@ -40,11 +41,15 @@ export class MenuComponent implements OnInit, OnDestroy {
   activeGames: number = 0;
   playersInGames: number = 0;
 
-  message: WebSocketMessage;
+  // Suscripciones a los datos necesarios
+  friendListSubscription: Subscription;
+  gameInvitationSubscription: Subscription;
+  totalPlayersSubscription: Subscription;
+  activeGamesSubscription: Subscription;
+  playersInGamesSubscription: Subscription;
 
-  isConnected: boolean = false;
+  // Suscripciones generales
   connected$: Subscription;
-  messageReceived$: Subscription;
   disconnected$: Subscription;
 
   constructor(
@@ -55,7 +60,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     private userService: UserService
   ) { }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']);
     }
@@ -63,54 +68,105 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.user = this.authService.getUser();
     this.avatarUrl = this.IMG_URL + this.user.avatar.url;
 
-    this.connected$ = this.webSocketService.connected.subscribe(() => {
-      this.isConnected = true;
-      //console.log(this.isConnected);
+    // Cargar la lista de amigos y solicitudes de amistad
+    await this.loadFriends();
+    await this.loadFriendRequests();
+
+    // Solicitar los datos necesarios
+    if (this.webSocketService.isConnectedRxjs()) {
+      this.webSocketService.initMenuData(this.user.userId);
+    } else {
+      this.connected$ = this.webSocketService.connected.subscribe(() => {
+        this.webSocketService.initMenuData(this.user.userId);
+      });
+    }
+
+    // Desconexión del usuario
+    this.disconnected$ = this.webSocketService.disconnected.subscribe(() => {
+      console.error('Desconectado del WebSocket');
     });
 
-    this.messageReceived$ = this.webSocketService.messageReceived.subscribe(message => {
-      //console.log('Mensaje recibido en el componente:', message);
-      this.webSocketMessage(message);
+    // Lista de amigos con sus estados
+    this.friendListSubscription = this.webSocketService.friendList$.subscribe((friends) => {
+      this.friends = friends;
+      this.filterFriends();
     });
 
-    this.disconnected$ = this.webSocketService.disconnected.subscribe(() => this.isConnected = false);
+    // Invitaciones a partidas
+    this.gameInvitationSubscription = this.webSocketService.gameInvitationSubject.subscribe(async (invitation: GameInvitation) => {
+      await this.handleInvitation(invitation);
+    });
 
-    this.loadFriends();
-    this.loadFriendRequests();
+    // Estadísticas del juego
+    this.totalPlayersSubscription = this.webSocketService.totalPlayersSubject.subscribe(total => {
+      this.totalPlayers = total;
+    });
+    this.activeGamesSubscription = this.webSocketService.activeGamesSubject.subscribe(active => {
+      this.activeGames = active;
+    });
+    this.playersInGamesSubscription = this.webSocketService.playersInGamesSubject.subscribe(players => {
+      this.playersInGames = players;
+    });
   }
 
   ngOnDestroy(): void {
-    this.connected$.unsubscribe();
-    this.messageReceived$.unsubscribe();
-    this.disconnected$.unsubscribe();
+    if (this.connected$) {
+      this.connected$.unsubscribe();
+    }
+
+    if (this.disconnected$) {
+      this.disconnected$.unsubscribe();
+    }
+
+    if (this.gameInvitationSubscription) {
+      this.gameInvitationSubscription.unsubscribe();
+    }
+
+    if (this.totalPlayersSubscription) {
+      this.totalPlayersSubscription.unsubscribe();
+    }
+
+    if (this.activeGamesSubscription) {
+      this.activeGamesSubscription.unsubscribe();
+    }
+
+    if (this.playersInGamesSubscription) {
+      this.playersInGamesSubscription.unsubscribe();
+    }
+
+    if (this.friendListSubscription) {
+      this.friendListSubscription.unsubscribe();
+    }
   }
 
-  // Ejecuta una acción dependiendo del mensaje del WebSocket
-  webSocketMessage(message: WebSocketMessage): void {
-    console.log('Mensaje recibido del WebSocket:', message);
+  // Invitaciones a partidas
+  async handleInvitation(invitation: GameInvitation): Promise<void> {
+    console.log('Invitación recibida:', invitation);
+    const result = await this.userService.getUserById(invitation.FromUserId);
 
-    switch (message.Type) {
-      case 'Connection':
-        console.log(message.Content);
-        break;
-      case 'FriendListUpdate':
-        //console.log("FriendListUpdate")
-        this.loadFriends();
-        break;
-      case 'FriendRequestUpdate':
-        console.log("FriendRequestUpdate")
-        this.loadFriendRequests();
-        break;
-      case 'StatsUpdate':
-        //console.log("StatsUpdate")
-        this.updateStats(message.Content);
-        break;
-      case 'FriendStatusUpdate':
-        //console.log("FriendStatusUpdate")
-        this.updateFriendStatus(message.Content);
-        break;
-      default:
-        console.error('Tipo de mensaje no reconocido:', message.Type);
+    if (result.success) {
+      const friend = result.data
+      const acceptInvitation = confirm(`Has sido invitado por ${friend.nickname} para jugar una partida. ¿Aceptas la invitación?`);
+
+      if (acceptInvitation) {
+
+        const action: GameRoomAction = {
+          Action: RoomAction.Friend,
+          FriendId: invitation.FromUserId,
+        };
+
+        const message: WebSocketMessage = {
+          Type: MsgType.GameRoom,
+          Id: this.user.userId,
+          Content: action,
+        };
+
+        await this.webSocketService.sendRxjs(message);
+        this.router.navigate(['/matchmaking'], { queryParams: { userId: invitation.FromUserId } });
+
+      } else {
+        console.log("Invitación rechazada.");
+      }
     }
   }
 
@@ -118,10 +174,10 @@ export class MenuComponent implements OnInit, OnDestroy {
   async loadFriends(): Promise<void> {
     try {
       const result = await this.friendRequestService.getFriends(this.user.userId);
+      this.webSocketService.setFriendList(result.data);
       this.friends = result.data;
       this.filterFriends();
-
-      console.log("Lista de amigos:", this.friends);
+      //console.log("Lista de amigos:", this.friends);
 
     } catch (error) {
       console.error('Error al cargar amigos:', error);
@@ -146,7 +202,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     try {
       const result = await this.friendRequestService.getPendingRequests(this.user.userId);
       this.friendRequests = result.data;
-      console.log("Solicitudes de amistad:", this.friendRequests)
+      //console.log("Solicitudes de amistad:", this.friendRequests)
 
     } catch (error) {
       console.error('Error al cargar solicitudes de amistad:', error);
@@ -162,7 +218,6 @@ export class MenuComponent implements OnInit, OnDestroy {
       try {
         const result = await this.userService.searchUsers(this.searchQuery);
         this.filteredUsers = result.data;
-        console.log(result);
 
         if (this.filteredUsers.length === 0) {
           console.log("No hay resultados");
@@ -172,7 +227,6 @@ export class MenuComponent implements OnInit, OnDestroy {
         console.error('Error al buscar usuarios:', error);
         this.filteredUsers = [];
       }
-
     }
   }
 
@@ -210,42 +264,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Actualiza estadísticas en tiempo real
-  updateStats(stats: GameStats): void {
-    console.log('Actualizando estadísticas con:', stats);
-
-    this.totalPlayers = stats.TotalPlayers;
-    this.activeGames = stats.ActiveGames;
-    this.playersInGames = stats.PlayersInGames;
-  }
-
-  // Actualiza estado del amigo
-  updateFriendStatus(updatedFriend: any): void {
-    console.log("Nuevo estado del amigo: ", updatedFriend)
-
-    if (!updatedFriend) {
-      this.filteredFriends.forEach(friend => {
-        friend.status = UserStatus.Offline;
-        console.log("Status_1", friend.status);
-      });
-
-    } else {
-
-      if (updatedFriend.length > 0) {
-        const userId = updatedFriend[0].UserId;
-        const status = updatedFriend[0].Status as UserStatus;
-        const friend = this.filteredFriends.find(friend => friend.userId === userId);
-        console.log("Status_2", status);
-
-        if (friend) {
-          friend.status = status;
-          console.log("Status_3", friend.status);
-        }
-      }
-    }
-  }
-
-  // Borrar un amigo
+  // Elimina un amigo
   async deletefriend(friend: any): Promise<void> {
     if (confirm(`¿Estás seguro de eliminar a ${friend.nickname} de tus amigos?`)) {
       try {
@@ -261,7 +280,6 @@ export class MenuComponent implements OnInit, OnDestroy {
   // Redirigir al perfil de otro usuario
   navigateToProfile(userId: number) {
     console.log("Navegando al perfil del usuario:", userId);
-
     this.router.navigate(['/friend-profile'], {
       queryParams: {
         id: userId

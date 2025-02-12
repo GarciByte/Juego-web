@@ -45,6 +45,7 @@ namespace JuegoWeb
             builder.Services.AddSingleton<WebSocketNetwork>();
             builder.Services.AddSingleton<IWebSocketMessageSender, WebSocketNetwork>();
             builder.Services.AddSingleton<WebSocketNotificationService>();
+            builder.Services.AddSingleton<GameRoomService>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -102,14 +103,13 @@ namespace JuegoWeb
                         Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"))
             });
 
-            // Habilita el uso de websockets
-            app.UseWebSockets();
-
             // Middleware que convierte CONNECT a GET
             app.UseMiddleware<WebSocketGetMiddleware>();
 
             // Middleware que agrega el JWT al encabezado de autorización
             app.UseMiddleware<WebSocketTokenMiddleware>();
+
+            app.UseWebSockets();
 
             app.UseHttpsRedirection();
 

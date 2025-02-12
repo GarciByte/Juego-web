@@ -11,10 +11,6 @@ import { Result } from "../models/result";
 export class ApiService {
 
   private readonly BASE_URL = environment.apiUrl;
-
-  private readonly USER_KEY = 'user';
-  private readonly TOKEN_KEY = 'jwtToken';
-
   jwt: string;
 
   constructor(private http: HttpClient) { }

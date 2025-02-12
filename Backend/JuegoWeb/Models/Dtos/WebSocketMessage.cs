@@ -8,7 +8,8 @@ public enum MsgType
     FriendListUpdate,       // Actualizar la lista de amigos
     FriendStatusUpdate,     // Actualizar estados de los amigos
     FriendRequestUpdate,    // Notificar de solicitudes de amistad
-    GameInvitation,         // Invitaciones a partidas
+    GameRoom,               // Crear una sala de juego
+    GameInvitation,         // Invitar a una sala de juego
     StatsUpdate,            // Estadísticas globales
 }
 

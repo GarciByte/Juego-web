@@ -6,6 +6,8 @@ import { MenuComponent } from './pages/menu/menu.component';
 import { UserProfileComponent } from './pages/user-profile/user-profile.component';
 import { MatchmakingComponent } from './pages/matchmaking/matchmaking.component';
 import { FriendProfileComponent } from './pages/friend-profile/friend-profile.component';
+import { GameComponent } from './pages/game/game.component';
+import { AdminProfileComponent } from './pages/admin-profile/admin-profile.component';
 
 export const routes: Routes = [
     { path: '', component: HomeComponent }, // Ruta principal
@@ -14,5 +16,7 @@ export const routes: Routes = [
     { path: 'menu', component: MenuComponent }, // Ruta menú
     { path: 'user-profile', component: UserProfileComponent }, // Ruta perfil del usuario
     { path: 'friend-profile', component: FriendProfileComponent }, // Ruta perfil de otro usuario
-    { path: 'matchmaking', component: MatchmakingComponent } // Ruta emparejamiento
+    { path: 'admin-profile', component: AdminProfileComponent }, // Ruta perfil admin
+    { path: 'matchmaking', component: MatchmakingComponent }, // Ruta emparejamiento
+    { path: 'game', component: GameComponent } // Ruta del juego
 ];

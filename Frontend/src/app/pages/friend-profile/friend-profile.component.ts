@@ -18,15 +18,15 @@ export class FriendProfileComponent implements OnInit {
 
   routeQueryMap$: Subscription;
 
-    user: User = null;
-    avatarUrl: string = null;
+  user: User = null;
+  avatarUrl: string = null;
 
   constructor(
-      private router: Router,
-      private authService: AuthService,
-      private route: ActivatedRoute,
-      private userService: UserService
-    ) { }
+    private router: Router,
+    private authService: AuthService,
+    private route: ActivatedRoute,
+    private userService: UserService
+  ) { }
 
   ngOnInit(): void {
     if (!this.authService.isAuthenticated()) {

@@ -32,7 +32,18 @@
           <p>{{ friend.nickname }}</p>
         </div>
         <div class="friend-actions">
-          <p>Estado: {{ friend.status }}</p>
+          <p>
+            Estado:
+            <span *ngIf="friend.status === 'Offline'" style="color:red">
+              Offline
+            </span>
+            <span *ngIf="friend.status === 'Online'" style="color:green">
+              Online
+            </span>
+            <span *ngIf="friend.status === 'Playing'" style="color:blue">
+              Playing
+            </span>
+          </p>
           <button class="btn-danger" (click)="deletefriend(friend); $event.stopPropagation()">
             🗑️ Eliminar
           </button>

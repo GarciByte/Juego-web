@@ -31,7 +31,6 @@ public class WebSocketHandler : IDisposable
 
     public async Task HandleAsync()
     {
-        User.Status = UserStatus.Online;
         try
         {
             // Mientras que el websocket esté conectado

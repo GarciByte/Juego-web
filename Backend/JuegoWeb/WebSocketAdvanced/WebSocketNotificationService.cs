@@ -1,5 +1,4 @@
 ﻿using JuegoWeb.Models.Dtos;
-using System.Text.Json;
 
 namespace JuegoWeb.WebSocketAdvanced;
 
@@ -44,7 +43,7 @@ public class WebSocketNotificationService
         await sender.SendToUserAsync(userId, message);
     }
 
-    // Notificar de una invitación a una partida (Por implementar)
+    // Notificar de una invitación a una partida
     public async Task NotifyGameInvitationAsync(int userId, GameInvitationDto invitation, IWebSocketMessageSender sender)
     {
         var message = new WebSocketMessage
@@ -52,6 +51,19 @@ public class WebSocketNotificationService
             Type = MsgType.GameInvitation,
             Id = userId,
             Content = invitation
+        };
+
+        await sender.SendToUserAsync(userId, message);
+    }
+
+    // Notificar una actualización en una sala de juego activa (alguien se desconecta)
+    public async Task NotifyRoomUpdatedAsync(int userId, GameRoomDto room, IWebSocketMessageSender sender)
+    {
+        var message = new WebSocketMessage
+        {
+            Type = MsgType.GameRoom,
+            Id = userId,
+            Content = room
         };
 
         await sender.SendToUserAsync(userId, message);
