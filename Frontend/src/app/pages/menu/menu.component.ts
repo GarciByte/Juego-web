@@ -51,6 +51,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   // Suscripciones generales
   connected$: Subscription;
   disconnected$: Subscription;
+  error$: Subscription;
 
   constructor(
     private router: Router,
@@ -62,7 +63,7 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     if (!this.authService.isAuthenticated()) {
-      this.router.navigate(['/login']);
+      this.router.navigate(['/']);
     }
 
     this.user = this.authService.getUser();
@@ -83,7 +84,13 @@ export class MenuComponent implements OnInit, OnDestroy {
 
     // Desconexión del usuario
     this.disconnected$ = this.webSocketService.disconnected.subscribe(() => {
-      console.error('Desconectado del WebSocket');
+      console.warn('Desconectado del WebSocket');
+    });
+
+    // Error del WebSocket
+    this.error$ = this.webSocketService.error.subscribe(() => {
+      this.authService.logout();
+      this.router.navigate(['/']);
     });
 
     // Lista de amigos con sus estados

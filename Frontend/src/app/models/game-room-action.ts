@@ -4,6 +4,7 @@ export enum RoomAction {
     Friend = 'Friend',
     CancelRandom = 'CancelRandom',
     CancelRoom = 'CancelRoom',
+    StartGame = 'StartGame'
 }
 
 export interface GameRoomAction {

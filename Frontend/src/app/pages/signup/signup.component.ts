@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } 
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import Swal from 'sweetalert2';
+import { WebsocketService } from '../../services/websocket.service';
 
 @Component({
   selector: 'app-signup',
@@ -21,7 +22,8 @@ export class SignupComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private websocketService: WebsocketService
   ) {
     this.myForm = this.formBuilder.group({
       avatar: [''],
@@ -34,7 +36,7 @@ export class SignupComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.authService.isAuthenticated()) {
+    if (this.authService.isAuthenticated() && this.websocketService.isConnectedRxjs()) {
       this.router.navigate(['/menu']);
     }
   }
@@ -88,11 +90,19 @@ export class SignupComponent implements OnInit {
             text: `¡Hola, ${nickname}!`,
             icon: 'success',
             showConfirmButton: false,
-            timer: 3000,
+            timer: 2000,
             timerProgressBar: true
           });
 
-          this.router.navigate(['/menu'])
+          if (this.websocketService.isConnectedRxjs()) {
+            this.router.navigate(['/menu'])
+          } else {
+            Swal.fire({
+              title: "Error en la conexión del WebSocket",
+              icon: "error",
+              confirmButtonText: "Vale"
+            });
+          }
 
         } else {
           this.throwError("Error en el inicio de sesión");

@@ -1,5 +1,4 @@
 ﻿using System.Net.WebSockets;
-using JuegoWeb.Models.Database.Entities;
 using JuegoWeb.Models.Dtos;
 using JuegoWeb.Services;
 using JuegoWeb.WebSocketAdvanced;
@@ -27,13 +26,9 @@ public class WebSocketController : ControllerBase
     [HttpGet]
     public async Task ConnectAsync()
     {
-        Console.WriteLine("WebSocketController fuera");
-
         // Si la petición es de tipo websocket la aceptamos
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
-            Console.WriteLine("WebSocketController dentro");
-
             // Obtener id de usuario desde el Token
             UserDto user = await ReadToken();
 
@@ -55,6 +50,7 @@ public class WebSocketController : ControllerBase
         // En caso contrario la rechazamos
         else
         {
+            Console.WriteLine("No es una conexión de WebSocket.");
             HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
         }
 

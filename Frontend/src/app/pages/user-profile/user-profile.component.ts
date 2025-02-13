@@ -3,6 +3,8 @@ import { Router, RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment.development';
 import { User } from '../../models/user';
 import { AuthService } from '../../services/auth.service';
+import { Subscription } from 'rxjs';
+import { WebsocketService } from '../../services/websocket.service';
 
 @Component({
   selector: 'app-user-profile',
@@ -17,15 +19,25 @@ export class UserProfileComponent implements OnInit {
   user: User = null;
   avatarUrl: string = null;
 
+  // Suscripciones generales
+  error$: Subscription;
+
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private webSocketService: WebsocketService
   ) { }
 
   ngOnInit(): void {
     if (!this.authService.isAuthenticated()) {
-      this.router.navigate(['/login']);
+      this.router.navigate(['/']);
     }
+
+    // Error del WebSocket
+    this.error$ = this.webSocketService.error.subscribe(() => {
+      this.authService.logout();
+      this.router.navigate(['/']);
+    });
 
     this.user = this.authService.getUser();
     this.avatarUrl = this.IMG_URL + this.user.avatar.url;

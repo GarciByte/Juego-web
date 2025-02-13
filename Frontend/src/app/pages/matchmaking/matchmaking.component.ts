@@ -50,8 +50,10 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
   friendListSubscription: Subscription;
   connected$: Subscription;
   disconnected$: Subscription;
+  error$: Subscription;
   routeSubscription: Subscription;
   roomSubscription: Subscription;
+  gameStartedSubscription: Subscription;
 
   constructor(
     private router: Router,
@@ -64,7 +66,7 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     if (!this.authService.isAuthenticated()) {
-      this.router.navigate(['/login']);
+      this.router.navigate(['/']);
     }
 
     this.user = this.authService.getUser();
@@ -144,6 +146,7 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
           }
         }
 
+        this.isSearching = false;
         console.log("Sala actualizada:", this.gameRoom);
         console.log("hostPlayer: ", this.hostPlayer);
         console.log("guestPlayer: ", this.guestPlayer);
@@ -155,12 +158,23 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
       console.error("Desconectado del WebSocket");
     });
 
+    // Error del WebSocket
+    this.error$ = this.webSocketService.error.subscribe(() => {
+      this.authService.logout();
+      this.router.navigate(['/']);
+    });
+
     // Lista de amigos con sus estados
     this.friendListSubscription = this.webSocketService.friendList$.subscribe((friends) => {
       this.friends = friends;
     });
 
     console.log(this.gameStarted);
+
+    // Comprueba si el anfitrión ha empezado la partida
+    this.gameStartedSubscription = this.webSocketService.gameStartedSubject.subscribe(() => {
+      this.startGame();
+    });
   }
 
   // Invitaciones a partidas
@@ -238,7 +252,7 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
   cancelRandomSearch(): void {
     if (this.isSearching) {
       this.isSearching = false;
-      
+
       const action: GameRoomAction = {
         Action: RoomAction.CancelRandom,
         FriendId: null,
@@ -284,23 +298,52 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
   // Iniciar la partida
   startGame(): void {
     this.gameStarted = true;
-    console.log("Partida iniciada");
+
+    if (this.gameStarted) {
+      console.log(this.isSearching);
+
+      let friendId = null
+      if (this.gameRoom.GuestUserId != null) {
+        friendId = this.gameRoom.GuestUserId
+      }
+
+      const action: GameRoomAction = {
+        Action: RoomAction.StartGame,
+        FriendId: friendId,
+      };
+
+      const message: WebSocketMessage = {
+        Type: MsgType.GameRoom,
+        Id: this.user.userId,
+        Content: action,
+      };
+
+      this.webSocketService.sendRxjs(message);
+    }
+
+    this.router.navigate(['/game']);
   }
 
   // Regresar al menú
-  leaveMatchmaking(): void { 
+  leaveMatchmaking(): void {
     this.router.navigate(['/menu']);
   }
 
   // Elimina la sala si el usuario la abandona
   clearGameRoom(): void {
-    this.cancelRandomSearch()
-    this.webSocketService.clearGameRoom(this.user.userId);
+    if (this.user) {
+      this.cancelRandomSearch()
+      this.webSocketService.clearGameRoom(this.user.userId);
+    }
   }
 
   ngOnDestroy(): void {
     if (!this.gameStarted) {
       this.clearGameRoom();
+    }
+
+    if (this.gameStartedSubscription) {
+      this.gameStartedSubscription.unsubscribe();
     }
 
     if (this.friendListSubscription) {

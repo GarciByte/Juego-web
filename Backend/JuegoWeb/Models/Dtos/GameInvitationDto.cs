@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace JuegoWeb.Models.Dtos;
+﻿namespace JuegoWeb.Models.Dtos;
 
 public class GameInvitationDto
 {

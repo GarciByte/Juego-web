@@ -4,6 +4,7 @@ using JuegoWeb.Models.Database.Repositories.Implementations;
 using JuegoWeb.Models.Mappers;
 using JuegoWeb.Services;
 using JuegoWeb.WebSocketAdvanced;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -51,6 +52,16 @@ namespace JuegoWeb
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // Configuración del WebSocket
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                options.ListenAnyIP(7136, listenOptions =>
+                {
+                    listenOptions.UseHttps();
+                    listenOptions.Protocols = HttpProtocols.Http1;
+                });
+            });
+
             // Configuración de CORS
             builder.Services.AddCors(options =>
             {
@@ -86,6 +97,12 @@ namespace JuegoWeb
 
             var app = builder.Build();
 
+            // Middleware que convierte CONNECT a GET
+            app.UseMiddleware<WebSocketGetMiddleware>();
+
+            // Middleware que agrega el JWT al encabezado de autorización
+            app.UseMiddleware<WebSocketTokenMiddleware>();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -102,12 +119,6 @@ namespace JuegoWeb
                 FileProvider = new PhysicalFileProvider(
                         Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"))
             });
-
-            // Middleware que convierte CONNECT a GET
-            app.UseMiddleware<WebSocketGetMiddleware>();
-
-            // Middleware que agrega el JWT al encabezado de autorización
-            app.UseMiddleware<WebSocketTokenMiddleware>();
 
             app.UseWebSockets();
 

@@ -5,6 +5,7 @@ import { User } from '../../models/user';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { UserService } from '../../services/user.service';
+import { WebsocketService } from '../../services/websocket.service';
 
 @Component({
   selector: 'app-friend-profile',
@@ -21,17 +22,27 @@ export class FriendProfileComponent implements OnInit {
   user: User = null;
   avatarUrl: string = null;
 
+  // Suscripciones generales
+  error$: Subscription;
+
   constructor(
     private router: Router,
     private authService: AuthService,
     private route: ActivatedRoute,
-    private userService: UserService
+    private userService: UserService,
+    private webSocketService: WebsocketService
   ) { }
 
   ngOnInit(): void {
     if (!this.authService.isAuthenticated()) {
-      this.router.navigate(['/login']);
+      this.router.navigate(['/']);
     }
+
+    // Error del WebSocket
+    this.error$ = this.webSocketService.error.subscribe(() => {
+      this.authService.logout();
+      this.router.navigate(['/']);
+    });
 
     this.routeQueryMap$ = this.route.queryParamMap.subscribe(queryMap => this.init(queryMap));
   }

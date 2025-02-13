@@ -7,6 +7,7 @@ import { CardModule } from 'primeng/card';
 import { PasswordModule } from 'primeng/password';
 import { InputTextModule } from 'primeng/inputtext';
 import Swal from 'sweetalert2';
+import { WebsocketService } from '../../services/websocket.service';
 
 @Component({
   selector: 'app-login',
@@ -25,11 +26,12 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private websocketService: WebsocketService
   ) { }
 
-  async ngOnInit(): Promise<void> {
-    if (this.authService.isAuthenticated()) {
+  ngOnInit(): void {
+    if (this.authService.isAuthenticated() && this.websocketService.isConnectedRxjs()) {
       this.router.navigate(['/menu']);
     }
   }
@@ -63,11 +65,19 @@ export class LoginComponent implements OnInit {
         text: `¡Hola, ${nickname}!`,
         icon: 'success',
         showConfirmButton: false,
-        timer: 3000,
+        timer: 2000,
         timerProgressBar: true,
       });
 
-      this.router.navigate(['/menu'])
+      if (this.websocketService.isConnectedRxjs()) {
+        this.router.navigate(['/menu'])
+      } else {
+        Swal.fire({
+          title: "Error en la conexión del WebSocket",
+          icon: "error",
+          confirmButtonText: "Vale"
+        });
+      }
 
     } else {
       console.error(result.error);

@@ -15,7 +15,6 @@ public class WebSocketGetMiddleware
         {
             // Convertir el método a GET
             context.Request.Method = HttpMethods.Get;
-            Console.WriteLine("Método cambiado de CONNECT a GET");
         }
 
         await _next(context);

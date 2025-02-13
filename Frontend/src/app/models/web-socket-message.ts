@@ -5,6 +5,7 @@ export enum MsgType {
     FriendStatusUpdate = 'FriendStatusUpdate',
     FriendRequestUpdate = 'FriendRequestUpdate',
     GameRoom = 'GameRoom',
+    StartGame = 'StartGame',
     GameInvitation = 'GameInvitation',
     StatsUpdate = 'StatsUpdate'
 }

@@ -8,7 +8,8 @@ public enum RoomAction
     Random,
     Friend,
     CancelRandom,
-    CancelRoom
+    CancelRoom,
+    StartGame
 }
 
 public class GameRoomActionDto

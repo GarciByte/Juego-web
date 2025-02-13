@@ -1,5 +1,4 @@
-﻿using JuegoWeb.Models.Database.Entities;
-using JuegoWeb.Models.Dtos;
+﻿using JuegoWeb.Models.Dtos;
 using JuegoWeb.Services;
 using System.Net.WebSockets;
 using System.Text.Json;
@@ -34,7 +33,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
         // Creamos un nuevo WebSocketHandler a partir del WebSocket recibido y lo añadimos a la lista
         WebSocketHandler handler = await AddWebSocketAsync(webSocket, user, friends);
 
-        if (handler != null) 
+        if (handler != null)
         {
             // El estado del usuario pasa a ser online
             handler.User.Status = UserStatus.Online;
@@ -209,13 +208,13 @@ public class WebSocketNetwork : IWebSocketMessageSender
         {
             handler.Dispose();
             _semaphore.Release();
-           
-            
+
+
             Console.WriteLine($"Eliminándolo de salas activas.");
 
             // Eliminarlo de cualquier sala activa
             var room = await _gameRoomService.HandleUserDisconnectionAsync(handler.Id);
-            if (room != null) 
+            if (room != null)
             {
                 await GameRoomUpdateAsync(room);
             }
@@ -401,6 +400,24 @@ public class WebSocketNetwork : IWebSocketMessageSender
                         await GameRoomUpdateAsync(roomUpdated);
                     }
                     Console.WriteLine($"Sala eliminada para: {handler.User.Nickname}");
+                    break;
+
+                // Comienza la partida de ambos usuarios
+                case RoomAction.StartGame:
+                    if (gameAction.FriendId != null)
+                    {
+                        Console.WriteLine($"Hay un oponente en la sala.");
+                        int opponentId = (int) gameAction.FriendId;
+
+                        // Enviar notificación al usuario invitado
+                        await SendToUserAsync(opponentId, new WebSocketMessage
+                        {
+                            Type = MsgType.StartGame,
+                            Id = opponentId,
+                            Content = gameAction.Action.ToString()
+                        });
+                    }
+                    Console.WriteLine($"La partida ha comenzado.");
                     break;
 
                 default:

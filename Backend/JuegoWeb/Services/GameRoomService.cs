@@ -1,6 +1,4 @@
-﻿using JuegoWeb.Models.Database.Entities;
-using JuegoWeb.Models.Dtos;
-using JuegoWeb.WebSocketAdvanced;
+﻿using JuegoWeb.Models.Dtos;
 using System.Text.Json;
 
 namespace JuegoWeb.Services;
@@ -251,4 +249,3 @@ public class GameRoomService
         return null;
     }
 }
-

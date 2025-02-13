@@ -7,6 +7,7 @@ import { User } from '../models/user';
 import { GameRoom } from '../models/game-room';
 import { GameInvitation } from '../models/game-invitation';
 import { GameRoomAction, RoomAction } from '../models/game-room-action';
+import Swal from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root',
@@ -16,8 +17,9 @@ export class WebsocketService {
   rxjsSocket: WebSocketSubject<WebSocketMessage> | null = null;
 
   // Eventos de conexión
-  connected = new Subject<void>();
-  disconnected = new Subject<void>();
+  public connected = new Subject<void>();
+  public disconnected = new Subject<void>();
+  public error = new Subject<void>();
 
   // Lista de amigos con sus estados
   private friendListSubject = new BehaviorSubject<User[]>([]);
@@ -29,6 +31,9 @@ export class WebsocketService {
 
   // Recibir invitaciones a partidas
   public gameInvitationSubject = new Subject<GameInvitation>();
+
+  // Recibir notificación de partida empezada
+  public gameStartedSubject = new Subject<void>();
 
   // Recibir la cantidad total de jugadores conectados
   public totalPlayersSubject = new Subject<number>();
@@ -85,6 +90,10 @@ export class WebsocketService {
         this.updateGameRoom(message.Content);
         break;
 
+      case MsgType.StartGame: // Iniciar la partida al usuario invitado
+        this.gameStartedSubject.next();
+        break;
+
       default:
         console.error("Mensaje no reconocido:", message.Type);
         break;
@@ -136,10 +145,18 @@ export class WebsocketService {
 
   private onError(error: any) {
     console.error("Error en WebSocket:", error);
+
+    Swal.fire({
+      title: "Se ha perdido la conexión con el servidor",
+      icon: "error",
+      confirmButtonText: "Vale",
+    });
+
+    this.error.next();
   }
 
   private onDisconnected() {
-    console.log("WebSocket desconectado");
+    console.log("WebSocket desconectado.");
     this.disconnected.next();
   }
 
@@ -184,7 +201,7 @@ export class WebsocketService {
         });
 
       } else {
-        console.error("El WebSocket ya está conectado.");
+        console.warn("El WebSocket ya está conectado.");
         resolve();
       }
     });

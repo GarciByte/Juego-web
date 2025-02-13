@@ -9,6 +9,7 @@ public enum MsgType
     FriendStatusUpdate,     // Actualizar estados de los amigos
     FriendRequestUpdate,    // Notificar de solicitudes de amistad
     GameRoom,               // Crear una sala de juego
+    StartGame,              // Iniciar la partida al usuario invitado
     GameInvitation,         // Invitar a una sala de juego
     StatsUpdate,            // Estadísticas globales
 }
