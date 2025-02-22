@@ -13,6 +13,7 @@ import { WebSocketMessage, MsgType } from '../../models/web-socket-message';
 import { FriendRequestService } from '../../services/friend-request.service';
 import { UserService } from '../../services/user.service';
 import { GameInvitation } from '../../models/game-invitation';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-matchmaking',
@@ -25,6 +26,8 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
   public readonly IMG_URL = environment.apiImg;
   user: User;
   friends: User[] = [];
+
+  invitation: GameInvitation | null = null; // Invitación de partida enviada
 
   hostPlayer: User; // El anfitrión
   guestPlayer: User | null = null; // El invitado
@@ -54,6 +57,8 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
   routeSubscription: Subscription;
   roomSubscription: Subscription;
   gameStartedSubscription: Subscription;
+  cancelGameInvitationSubject: Subscription;
+  errorGameInvitationSubject: Subscription;
 
   constructor(
     private router: Router,
@@ -72,6 +77,7 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
     this.user = this.authService.getUser();
     this.user.avatar.url = this.IMG_URL + this.user.avatar.url;
     this.hostPlayer = this.user;
+    this.invitationSent = false;
 
     // Cargar la lista de amigos
     await this.loadFriends();
@@ -90,6 +96,8 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
       if (params['userId']) {
         const userId = Number(params['userId']);
         await this.handleInvitation(userId);
+      } else {
+        this.webSocketService.clearGameRoom(this.user.userId);
       }
     });
 
@@ -100,6 +108,7 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
 
         if (room.RoomType === GameRoomType.Bot) {
           this.canStartGame = true;
+          this.startGame()
         }
 
         if (room.RoomType === GameRoomType.Friend && room.GuestUserId !== null && room.GuestUserId !== undefined) {
@@ -144,6 +153,7 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
               console.error("Se ha producido un error", hostUserId.error);
             }
           }
+          this.startGame();
         }
 
         this.isSearching = false;
@@ -169,11 +179,31 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
       this.friends = friends;
     });
 
-    console.log(this.gameStarted);
-
     // Comprueba si el anfitrión ha empezado la partida
     this.gameStartedSubscription = this.webSocketService.gameStartedSubject.subscribe(() => {
-      this.startGame();
+      this.gameStarted = true;
+      this.router.navigate(['/game']);
+    });
+
+    // Cancela la invitación a una partida
+    this.cancelGameInvitationSubject = this.webSocketService.cancelGameInvitationSubject.subscribe(() => {
+
+      Swal.fire({
+        title: "La invitación ha sido rechazada",
+        icon: "info",
+        confirmButtonText: "Aceptar"
+      });
+
+      this.invitationSent = false;
+      this.invitation = null;
+    });
+
+    // Notifica al usuario invitado en caso de abandono de la sala del anfitrión
+    this.errorGameInvitationSubject = this.webSocketService.errorGameInvitation$.subscribe(async (message: WebSocketMessage) => {
+      if (message) {
+        await this.webSocketService.errorGameInvitation();
+        this.router.navigate(['/menu']);
+      }
     });
   }
 
@@ -205,47 +235,52 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
 
   // Jugar contra un bot
   playAgainstBot(): void {
+    if (!(this.invitationSent)) {
+      if (!(this.gameRoom)) {
+        const action: GameRoomAction = {
+          Action: RoomAction.Bot,
+          FriendId: null,
+        };
 
-    if (!(this.gameRoom)) {
-      const action: GameRoomAction = {
-        Action: RoomAction.Bot,
-        FriendId: null,
-      };
+        const message: WebSocketMessage = {
+          Type: MsgType.GameRoom,
+          Id: this.user.userId,
+          Content: action,
+        };
 
-      const message: WebSocketMessage = {
-        Type: MsgType.GameRoom,
-        Id: this.user.userId,
-        Content: action,
-      };
-
-      this.webSocketService.sendRxjs(message);
+        this.webSocketService.sendRxjs(message);
+      } else {
+        this.throwError("Ya tienes una sala creada: " + this.gameRoom.RoomType);
+      }
     } else {
-      alert("Ya tienes una sala creada: " + this.gameRoom.RoomType);
+      this.throwError("Ya has enviado una invitación a un amigo");
     }
-
   }
 
   // Buscar un oponente aleatorio
   playRandom(): void {
-    if (!(this.gameRoom)) {
-      this.isSearching = true;
+    if (!(this.invitationSent)) {
+      if (!(this.gameRoom)) {
+        this.isSearching = true;
 
-      const action: GameRoomAction = {
-        Action: RoomAction.Random,
-        FriendId: null,
-      };
+        const action: GameRoomAction = {
+          Action: RoomAction.Random,
+          FriendId: null,
+        };
 
-      const message: WebSocketMessage = {
-        Type: MsgType.GameRoom,
-        Id: this.user.userId,
-        Content: action,
-      };
+        const message: WebSocketMessage = {
+          Type: MsgType.GameRoom,
+          Id: this.user.userId,
+          Content: action,
+        };
 
-      this.webSocketService.sendRxjs(message);
+        this.webSocketService.sendRxjs(message);
+      } else {
+        this.throwError("Ya tienes una sala creada: " + this.gameRoom.RoomType);
+      }
     } else {
-      alert("Ya tienes una sala creada: " + this.gameRoom.RoomType);
+      this.throwError("Ya has enviado una invitación a un amigo");
     }
-
   }
 
   // Cancelar la búsqueda aleatoria
@@ -268,6 +303,11 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Cancelar la invitación a la partida
+  async cancelInvitation(invitation: GameInvitation) {
+    this.webSocketService.cancelInvitation(invitation);
+  }
+
   // Invitar a un amigo
   inviteFriend(): void {
     if (!(this.invitationSent)) {
@@ -285,13 +325,22 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
         };
 
         this.webSocketService.sendRxjs(message);
-        alert("Se ha enviado la invitación.");
+        this.invitationSent = true;
+        this.invitation = invitation;
+
+        Swal.fire({
+          title: "Se ha enviado la invitación",
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true
+        });
 
       } else {
-        console.error("No se seleccionó un ID de amigo para invitar:");
+        this.throwError("No has seleccionado un amigo para invitar");
       }
     } else {
-      alert("Ya has invitado a un amigo");
+      this.throwError("Ya has enviado una invitación a un amigo");
     }
   }
 
@@ -299,8 +348,7 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
   startGame(): void {
     this.gameStarted = true;
 
-    if (this.gameStarted) {
-      console.log(this.isSearching);
+    if (this.canStartGame && this.gameStarted && this.isHost) {
 
       let friendId = null
       if (this.gameRoom.GuestUserId != null) {
@@ -317,10 +365,8 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
         Id: this.user.userId,
         Content: action,
       };
-
       this.webSocketService.sendRxjs(message);
     }
-
     this.router.navigate(['/game']);
   }
 
@@ -338,6 +384,10 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.invitation) {
+      this.cancelInvitation(this.invitation);
+    }
+
     if (!this.gameStarted) {
       this.clearGameRoom();
     }
@@ -365,5 +415,25 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
     if (this.roomSubscription) {
       this.roomSubscription.unsubscribe();
     }
+
+    if (this.error$) {
+      this.error$.unsubscribe();
+    }
+
+    if (this.cancelGameInvitationSubject) {
+      this.cancelGameInvitationSubject.unsubscribe();
+    }
+
+    if (this.errorGameInvitationSubject) {
+      this.errorGameInvitationSubject.unsubscribe();
+    }
+  }
+
+  throwError(error: string) {
+    Swal.fire({
+      title: error,
+      icon: "error",
+      confirmButtonText: "Aceptar"
+    });
   }
 }

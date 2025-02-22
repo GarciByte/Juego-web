@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment.development';
 import { User } from '../../models/user';
@@ -13,17 +13,15 @@ import { WebsocketService } from '../../services/websocket.service';
   templateUrl: './friend-profile.component.html',
   styleUrl: './friend-profile.component.css'
 })
-export class FriendProfileComponent implements OnInit {
+export class FriendProfileComponent implements OnInit, OnDestroy {
 
   public readonly IMG_URL = environment.apiImg;
 
-  routeQueryMap$: Subscription;
-
   user: User = null;
   avatarUrl: string = null;
-
-  // Suscripciones generales
+  GameHistoriesList: History[];
   error$: Subscription;
+  routeQueryMap$: Subscription;
 
   constructor(
     private router: Router,
@@ -50,8 +48,9 @@ export class FriendProfileComponent implements OnInit {
   async init(queryMap: ParamMap) {
     const id = parseInt(queryMap.get("id"));
     await this.getUser(id);
+    await this.getHistories(this.user.userId);
     console.log(this.user);
-    console.log(this.avatarUrl);
+    console.log(this.GameHistoriesList);
   }
 
   async getUser(userId: number): Promise<void> {
@@ -67,4 +66,28 @@ export class FriendProfileComponent implements OnInit {
       console.error('Error al buscar el usuario:', error);
     }
   }
+
+  async getHistories(userId: number): Promise<void> {
+    try {
+      const result = await this.userService.GetGameHistories(userId);
+
+      if (result.success) {
+        this.GameHistoriesList = result.data;
+      }
+
+    } catch (error) {
+      console.error('Error al obtener el historial de partidas:', error);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.error$) {
+      this.error$.unsubscribe();
+    }
+
+    if (this.routeQueryMap$) {
+      this.error$.unsubscribe();
+    }
+  }
+
 }

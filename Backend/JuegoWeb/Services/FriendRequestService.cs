@@ -54,9 +54,7 @@ public class FriendRequestService
         await _unitOfWork.SaveAsync();
 
         // Notificar una actualización
-        var insertedfriendRequest = await _unitOfWork.FriendRequestRepository.GetFriendRequestByIdAsync(friendRequest.Id);
-        var friendRequestDto = _friendRequestMapper.FriendRequestToDto(insertedfriendRequest);
-        await _webSocketNotificationService.NotifyFriendRequestUpdatedAsync(receiverId, friendRequestDto, _webSocketMessageSender);
+        await _webSocketNotificationService.NotifyFriendRequestUpdatedAsync(receiverId, _webSocketMessageSender);
     }
 
     // Aceptar una solicitud de amistad
@@ -90,11 +88,7 @@ public class FriendRequestService
         await _unitOfWork.SaveAsync();
 
         // Notificar una actualización
-        var updatedFriendsUser = await GetFriendsAsync(userFriend.UserId);
-        await _webSocketNotificationService.NotifyFriendListUpdatedAsync(userFriend.UserId, updatedFriendsUser, _webSocketMessageSender);
-
-        var updatedFriendsReverse = await GetFriendsAsync(reverseUserFriend.UserId);
-        await _webSocketNotificationService.NotifyFriendListUpdatedAsync(reverseUserFriend.UserId, updatedFriendsReverse, _webSocketMessageSender);
+        await _webSocketNotificationService.NotifyFriendListUpdatedAsync(friendRequest.SenderId, _webSocketMessageSender);
     }
 
     // Rechazar una solicitud de amistad
@@ -133,11 +127,17 @@ public class FriendRequestService
     {
         await _unitOfWork.UserFriendRepository.RemoveFriendshipAsync(userId, friendId);
 
-        // Notificar una actualización
-        var updatedFriendsUser = await GetFriendsAsync(userId);
-        await _webSocketNotificationService.NotifyFriendListUpdatedAsync(userId, updatedFriendsUser, _webSocketMessageSender);
+        // Eliminar la solicitud de amistad aceptada
+        var friendRequest = await _unitOfWork.FriendRequestRepository.GetByUsersAsync(userId, friendId);
 
-        var updatedFriendsReverse = await GetFriendsAsync(friendId);
-        await _webSocketNotificationService.NotifyFriendListUpdatedAsync(friendId, updatedFriendsReverse, _webSocketMessageSender);
+        if (friendRequest != null && friendRequest.IsAccepted)
+        {
+            _unitOfWork.FriendRequestRepository.DeleteFriendRequest(friendRequest);
+        }
+
+        await _unitOfWork.SaveAsync();
+
+        // Notificar una actualización
+        await _webSocketNotificationService.NotifyFriendListUpdatedAsync(friendId, _webSocketMessageSender);
     }
 }

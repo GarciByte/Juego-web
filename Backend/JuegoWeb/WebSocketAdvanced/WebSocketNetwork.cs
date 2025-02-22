@@ -1,4 +1,5 @@
-﻿using JuegoWeb.Models.Dtos;
+﻿using JuegoWeb.MemoryGame;
+using JuegoWeb.Models.Dtos;
 using JuegoWeb.Services;
 using System.Net.WebSockets;
 using System.Text.Json;
@@ -7,12 +8,19 @@ namespace JuegoWeb.WebSocketAdvanced;
 
 public class WebSocketNetwork : IWebSocketMessageSender
 {
+    private readonly IServiceProvider _serviceProvider;
+
     private readonly GameRoomService _gameRoomService;
 
     private readonly WebSocketNotificationService _webSocketNotificationService;
 
+    private readonly MemoryGameService _memoryGameService;
+
     // Lista de WebSocketHandler (clase que gestiona cada WebSocket)
     private readonly List<WebSocketHandler> _handlers = new List<WebSocketHandler>();
+
+    // Lista de invitaciones a partidas
+    private readonly List<GameInvitationDto> _gameInvitations = new List<GameInvitationDto>();
 
     // Semáforo para controlar el acceso a la lista de WebSocketHandler
     private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
@@ -20,18 +28,24 @@ public class WebSocketNetwork : IWebSocketMessageSender
     // Diccionario para almacenar los CancellationTokenSource asociados a cada usuario
     private Dictionary<int, CancellationTokenSource> cancellationTokens = new Dictionary<int, CancellationTokenSource>();
 
-    public WebSocketNetwork(WebSocketNotificationService webSocketNotificationService, GameRoomService gameRoomService)
+    public WebSocketNetwork(
+        WebSocketNotificationService webSocketNotificationService,
+        GameRoomService gameRoomService,
+        MemoryGameService memoryGameService,
+        IServiceProvider serviceProvider)
     {
         _webSocketNotificationService = webSocketNotificationService;
         _gameRoomService = gameRoomService;
+        _memoryGameService = memoryGameService;
+        _serviceProvider = serviceProvider;
     }
 
-    public async Task HandleAsync(WebSocket webSocket, UserDto user, List<UserDto> friends)
+    public async Task HandleAsync(WebSocket webSocket, UserDto user)
     {
         Console.WriteLine("Conexión establecida con " + user.Nickname);
 
         // Creamos un nuevo WebSocketHandler a partir del WebSocket recibido y lo añadimos a la lista
-        WebSocketHandler handler = await AddWebSocketAsync(webSocket, user, friends);
+        WebSocketHandler handler = await AddWebSocketAsync(webSocket, user);
 
         if (handler != null)
         {
@@ -51,7 +65,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
         }
     }
 
-    private async Task<WebSocketHandler> AddWebSocketAsync(WebSocket webSocket, UserDto user, List<UserDto> friends)
+    private async Task<WebSocketHandler> AddWebSocketAsync(WebSocket webSocket, UserDto user)
     {
         // Esperamos a que haya un hueco disponible
         await _semaphore.WaitAsync();
@@ -61,7 +75,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
             if (existingHandler == null)
             {
                 // Creamos un nuevo WebSocketHandler, nos suscribimos a sus eventos y lo añadimos a la lista
-                WebSocketHandler handler = new(user.UserId, webSocket, user, friends);
+                WebSocketHandler handler = new(user.UserId, webSocket, user, _serviceProvider);
                 handler.Disconnected += OnDisconnectedAsync;
                 handler.MessageReceived += OnMessageReceivedAsync;
                 _handlers.Add(handler);
@@ -84,7 +98,9 @@ public class WebSocketNetwork : IWebSocketMessageSender
     // Notificar el estado del usuario a sus amigos
     private async Task NotifyUserStatusAsync(WebSocketHandler handler)
     {
-        foreach (var friend in handler.Friends)
+        List<UserDto> friends = await handler.GetFriendsAsync(handler.Id);
+
+        foreach (var friend in friends)
         {
             await _webSocketNotificationService.NotifyUserStatusToFriendAsync(friend.UserId, handler.Id, handler.User.Status, this);
         }
@@ -96,13 +112,16 @@ public class WebSocketNetwork : IWebSocketMessageSender
         await _semaphore.WaitAsync();
         try
         {
-            var onlineFriends = handler.Friends
+            List<UserDto> friends = await handler.GetFriendsAsync(handler.Id);
+
+            var onlineFriends = friends
             .Where(friend => _handlers.Any(h => h.Id == friend.UserId))
             .Select(friend => new
             {
-                UserId = friend.UserId,
+                friend.UserId,
                 Status = GetUserStatus(friend.UserId).ToString()
-            });
+            })
+            .ToList();
 
             var onlineFriendsMessage = new WebSocketMessage
             {
@@ -138,6 +157,12 @@ public class WebSocketNetwork : IWebSocketMessageSender
         {
             // Cantidad total de jugadores
             totalPlayers = _handlers.Count;
+
+            // Cantidad de partidas activas en curso
+            activeGames = _memoryGameService.GetActiveGameCount();
+
+            // Cantidad total de jugadores que están en partidas activas
+            playersInGames = _memoryGameService.GetActivePlayersCount();
         }
         finally
         {
@@ -209,8 +234,12 @@ public class WebSocketNetwork : IWebSocketMessageSender
             handler.Dispose();
             _semaphore.Release();
 
-
-            Console.WriteLine($"Eliminándolo de salas activas.");
+            // Eliminarlo de la partida en curso
+            var gameRoom = await _gameRoomService.GetRoomByUserIdsAsync(handler.Id);
+            if (gameRoom != null)
+            {
+                await _memoryGameService.DeleteGameAsync(gameRoom.RoomId, handler.Id);
+            }
 
             // Eliminarlo de cualquier sala activa
             var room = await _gameRoomService.HandleUserDisconnectionAsync(handler.Id);
@@ -219,10 +248,42 @@ public class WebSocketNetwork : IWebSocketMessageSender
                 await GameRoomUpdateAsync(room);
             }
 
-            Console.WriteLine($"Enviando notificaciones.");
+            // Eliminar cualquier invitación enviada o recibida
+            var existingGameInvitations = _gameInvitations.FindAll(
+                                invitation => invitation.FromUserId == handler.Id || invitation.ToUserId == handler.Id);
+
+            if (existingGameInvitations.Count > 0)
+            {
+                Console.WriteLine($"Hay {existingGameInvitations.Count} invitaciones pendientes para este usuario.");
+
+                foreach (var existingGameInvitation in existingGameInvitations)
+                {
+                    if (handler.Id == existingGameInvitation.FromUserId)
+                    {
+                        await _webSocketNotificationService.NotifyCancelGameInvitationAsync(existingGameInvitation.ToUserId, existingGameInvitation, this);
+                    }
+                    else
+                    {
+                        await _webSocketNotificationService.NotifyCancelGameInvitationAsync(existingGameInvitation.FromUserId, existingGameInvitation, this);
+                    }
+                    await _semaphore.WaitAsync();
+                    try
+                    {
+                        _gameInvitations.Remove(existingGameInvitation);
+                    }
+                    finally
+                    {
+                        _semaphore.Release();
+                    }
+                }
+            }
+
+            Console.WriteLine($"Solo quedan {_gameInvitations.Count} invitaciones pendientes.");
+
+            List<UserDto> friends = await handler.GetFriendsAsync(handler.Id);
 
             // Notificar a amigos
-            foreach (var friend in handler.Friends)
+            foreach (var friend in friends)
             {
                 await _webSocketNotificationService.NotifyUserStatusToFriendAsync(
                     friend.UserId,
@@ -231,11 +292,9 @@ public class WebSocketNetwork : IWebSocketMessageSender
                     this
                 );
             }
-            Console.WriteLine($"Notificaciones a amigos enviadas.");
 
             // Notificar las estadísticas globales
             await NotifyStatsAsync();
-            Console.WriteLine($"Notificaciones globales enviadas.");
 
             Console.WriteLine($"Desconexión completada.");
         }
@@ -264,9 +323,29 @@ public class WebSocketNetwork : IWebSocketMessageSender
                     await GameRoomCreationAsync(handler, message);
                     break;
 
-                // Invitación a un amigo
+                // Invitación de un amigo
                 case MsgType.GameInvitation:
                     await GameInvitationAsync(handler, message);
+                    break;
+
+                // Cancelar la invitación
+                case MsgType.CancelGameInvitation:
+                    await CancelGameInvitationAsync(handler, message);
+                    break;
+
+                // Mensaje del chat
+                case MsgType.Chat:
+                    await HandleChatMessageAsync(handler, message);
+                    break;
+
+                // Actualizaciones de la partida (el jugador ha volteado una carta)
+                case MsgType.GameUpdate:
+                    await GameMoveAsync(handler, message);
+                    break;
+
+                // Solicitud de revancha en una partida
+                case MsgType.RematchRequest:
+                    await RequestRematchAsync(handler, message);
                     break;
 
                 default:
@@ -280,9 +359,51 @@ public class WebSocketNetwork : IWebSocketMessageSender
         }
     }
 
+    // Manejar mensajes del chat
+    private async Task HandleChatMessageAsync(WebSocketHandler handler, WebSocketMessage message)
+    {
+        ChatMessageDto chatMessage = null;
+
+        try
+        {
+            string jsonContent = message.Content.ToString();
+            chatMessage = JsonSerializer.Deserialize<ChatMessageDto>(jsonContent);
+            string updatedMessage = $"{chatMessage.Nickname}: {chatMessage.Content}";
+
+            var chatMessageUpdated = new ChatMessageDto
+            {
+                UserId = chatMessage.UserId,
+                Nickname = chatMessage.Nickname,
+                FriendId = chatMessage.FriendId,
+                Content = updatedMessage
+            };
+
+            await SendToUserAsync(chatMessage.FriendId, new WebSocketMessage
+            {
+                Type = MsgType.Chat,
+                Id = chatMessage.FriendId,
+                Content = chatMessageUpdated
+            });
+
+            var chatResponse = new WebSocketMessage
+            {
+                Type = MsgType.Chat,
+                Id = chatMessage.UserId,
+                Content = chatMessageUpdated
+            };
+
+            await handler.SendAsync(chatResponse);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al deserializar chatMessage: {ex.Message}");
+        }
+    }
+
     // Notificar la invitación a una partida
     private async Task GameInvitationAsync(WebSocketHandler handler, WebSocketMessage message)
     {
+        Console.WriteLine($"Invitación de partida enviada por {handler.User.Nickname}.");
         GameInvitationDto gameInvitation = null;
 
         try
@@ -290,10 +411,113 @@ public class WebSocketNetwork : IWebSocketMessageSender
             string jsonContent = message.Content.ToString();
             gameInvitation = JsonSerializer.Deserialize<GameInvitationDto>(jsonContent);
             await _webSocketNotificationService.NotifyGameInvitationAsync(gameInvitation.ToUserId, gameInvitation, this);
+
+            await _semaphore.WaitAsync();
+            try
+            {
+                _gameInvitations.Add(gameInvitation);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+            Console.WriteLine($"Hay {_gameInvitations.Count} invitaciones pendientes.");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error al deserializar gameInvitation: {ex.Message}");
+        }
+    }
+
+    // Notificar la cancelación de una invitación a una partida
+    private async Task CancelGameInvitationAsync(WebSocketHandler handler, WebSocketMessage message)
+    {
+        Console.WriteLine($"Cancelación de la invitación de partida enviada por {handler.User.Nickname}.");
+        GameInvitationDto gameInvitation = null;
+
+        try
+        {
+            string jsonContent = message.Content.ToString();
+            gameInvitation = JsonSerializer.Deserialize<GameInvitationDto>(jsonContent);
+
+            if (handler.Id == gameInvitation.FromUserId)
+            {
+                await _webSocketNotificationService.NotifyCancelGameInvitationAsync(gameInvitation.ToUserId, gameInvitation, this);
+            }
+            else
+            {
+                await _webSocketNotificationService.NotifyCancelGameInvitationAsync(gameInvitation.FromUserId, gameInvitation, this);
+            }
+
+            await _semaphore.WaitAsync();
+            try
+            {
+                if (_gameInvitations.Contains(gameInvitation))
+                {
+                    _gameInvitations.Remove(gameInvitation);
+                }
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+            Console.WriteLine($"Aun quedan {_gameInvitations.Count} invitaciones pendientes.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al deserializar gameInvitation: {ex.Message}");
+        }
+    }
+
+    // Solicitud de revancha en una partida
+    private async Task RequestRematchAsync(WebSocketHandler handler, WebSocketMessage message)
+    {
+        GameRoomDto gameRoom = null;
+        try
+        {
+            string jsonContent = message.Content.ToString();
+            gameRoom = JsonSerializer.Deserialize<GameRoomDto>(jsonContent);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al deserializar GameRoomDto: {ex.Message}");
+        }
+
+        if (gameRoom != null)
+        {
+            var activeGameRoom = await _gameRoomService.GetRoomByUserIdsAsync(handler.Id);
+            if (activeGameRoom != null)
+            {
+                bool existingGameRoom = activeGameRoom.RoomId == gameRoom.RoomId;
+                if (existingGameRoom)
+                {
+                    await _memoryGameService.RequestRematchAsync(activeGameRoom, handler.Id);
+                }
+                else
+                {
+                    Console.WriteLine($"El usuario {handler.User.Nickname} no está en ninguna sala activa.");
+                }
+            }
+        }
+    }
+
+    // Actualizaciones de la partida (el jugador ha volteado una carta)
+    private async Task GameMoveAsync(WebSocketHandler handler, WebSocketMessage message)
+    {
+        MemoryGameMoveDto move = null;
+        try
+        {
+            string jsonContent = message.Content.ToString();
+            move = JsonSerializer.Deserialize<MemoryGameMoveDto>(jsonContent);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al deserializar MemoryGameMoveDto: {ex.Message}");
+        }
+
+        if (move != null)
+        {
+            await _memoryGameService.ProcessMoveAsync(move.RoomId, handler.Id, move);
         }
     }
 
@@ -338,7 +562,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
 
                 // Crear una sala para jugar contra un oponente aleatorio
                 case RoomAction.Random:
-                    // CancellationTokenSource para cancelar la búsqueda
+                    Console.WriteLine($"El usuario {handler.User.Nickname} ha pasado por aquí. (Random)");
                     CancellationTokenSource cts = new CancellationTokenSource();
                     cancellationTokens[handler.Id] = cts;
 
@@ -361,28 +585,64 @@ public class WebSocketNetwork : IWebSocketMessageSender
 
                 // Crear una sala para jugar contra un amigo
                 case RoomAction.Friend:
+                    Console.WriteLine($"El usuario {handler.User.Nickname} ha pasado por aquí. (Friend)");
                     if (gameAction.FriendId.HasValue)
                     {
                         int hostUserId = gameAction.FriendId.Value;
-                        GameRoomDto gameRoom = await _gameRoomService.CreateRoomByInvitationAsync(hostUserId, handler.Id);
+                        var handlerOnline = _handlers.FirstOrDefault(h => h.Id == hostUserId);
 
-                        // Enviar sala al anfitrión
-                        await SendToUserAsync(hostUserId, new WebSocketMessage
+                        if (handlerOnline != null && handlerOnline.IsOpen)
                         {
-                            Type = MsgType.GameRoom,
-                            Id = hostUserId,
-                            Content = gameRoom
-                        });
+                            GameRoomDto gameRoomFriend = await _gameRoomService.CreateRoomByInvitationAsync(hostUserId, handler.Id);
 
-                        // Enviar sala al usuario invitado
-                        var roomResponse = new WebSocketMessage
+                            // Enviar sala al anfitrión
+                            await SendToUserAsync(hostUserId, new WebSocketMessage
+                            {
+                                Type = MsgType.GameRoom,
+                                Id = hostUserId,
+                                Content = gameRoomFriend
+                            });
+
+                            // Enviar sala al usuario invitado
+                            var roomResponse = new WebSocketMessage
+                            {
+                                Type = MsgType.GameRoom,
+                                Id = handler.Id,
+                                Content = gameRoomFriend
+                            };
+
+                            await handler.SendAsync(roomResponse);
+                        }
+                        else
                         {
-                            Type = MsgType.GameRoom,
-                            Id = handler.Id,
-                            Content = gameRoom
-                        };
+                            Console.WriteLine($"No se puede crear la partida porque el anfitrión abandonó la sala.");
 
-                        await handler.SendAsync(roomResponse);
+                            var error = new WebSocketMessage
+                            {
+                                Type = MsgType.ErrorGameInvitation,
+                                Id = handler.Id,
+                                Content = "ErrorGameInvitation"
+                            };
+
+                            await handler.SendAsync(error);
+                        }
+
+                        await _semaphore.WaitAsync();
+                        try
+                        {
+                            var existingGameInvitation = _gameInvitations.FirstOrDefault(
+                                invitation => invitation.FromUserId == hostUserId && invitation.ToUserId == handler.Id);
+
+                            if (existingGameInvitation != null)
+                            {
+                                _gameInvitations.Remove(existingGameInvitation);
+                            }
+                        }
+                        finally
+                        {
+                            _semaphore.Release();
+                        }
+                        Console.WriteLine($"Quedan {_gameInvitations.Count} invitaciones pendientes.");
                     }
                     break;
 
@@ -394,6 +654,14 @@ public class WebSocketNetwork : IWebSocketMessageSender
 
                 // Elimina al usuario de la sala en la que se encuentra
                 case RoomAction.CancelRoom:
+                    Console.WriteLine($"El usuario {handler.User.Nickname} ha pasado por aquí. (CancelRoom)");
+
+                    var activeGameRoom = await _gameRoomService.GetRoomByUserIdsAsync(handler.Id);
+                    if (activeGameRoom != null)
+                    {
+                        await _memoryGameService.DeleteGameAsync(activeGameRoom.RoomId, handler.Id);
+                    }
+
                     var roomUpdated = await _gameRoomService.HandleUserDisconnectionAsync(handler.Id);
                     if (roomUpdated != null)
                     {
@@ -404,20 +672,35 @@ public class WebSocketNetwork : IWebSocketMessageSender
 
                 // Comienza la partida de ambos usuarios
                 case RoomAction.StartGame:
-                    if (gameAction.FriendId != null)
-                    {
-                        Console.WriteLine($"Hay un oponente en la sala.");
-                        int opponentId = (int) gameAction.FriendId;
+                    Console.WriteLine($"El usuario {handler.User.Nickname} ha pasado por aquí. (StartGame)");
 
-                        // Enviar notificación al usuario invitado
-                        await SendToUserAsync(opponentId, new WebSocketMessage
+                    GameRoomDto gameRoom = await _gameRoomService.GetRoomByUserIdsAsync(handler.Id);
+
+                    if (gameRoom != null)
+                    {
+                        if (gameAction.FriendId != null)
                         {
-                            Type = MsgType.StartGame,
-                            Id = opponentId,
-                            Content = gameAction.Action.ToString()
-                        });
+                            int opponentId = (int)gameAction.FriendId;
+
+                            // Enviar notificación al usuario invitado
+                            await SendToUserAsync(opponentId, new WebSocketMessage
+                            {
+                                Type = MsgType.StartGame,
+                                Id = opponentId,
+                                Content = gameAction.Action.ToString()
+                            });
+                        }
+
+                        // Crea la partida
+                        _memoryGameService.CreateGame(gameRoom);
+
+                        // Notificar las estadísticas globales
+                        await NotifyStatsAsync();
                     }
-                    Console.WriteLine($"La partida ha comenzado.");
+                    else
+                    {
+                        Console.WriteLine($"El usuario {handler.User.Nickname} no se encuentra en una sala.");
+                    }
                     break;
 
                 default:

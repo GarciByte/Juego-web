@@ -8,10 +8,18 @@ public enum MsgType
     FriendListUpdate,       // Actualizar la lista de amigos
     FriendStatusUpdate,     // Actualizar estados de los amigos
     FriendRequestUpdate,    // Notificar de solicitudes de amistad
-    GameRoom,               // Crear una sala de juego
-    StartGame,              // Iniciar la partida al usuario invitado
-    GameInvitation,         // Invitar a una sala de juego
+    GameRoom,               // Gestionar una sala de juego
+    StartGame,              // Notificar del inicio de la partida al usuario invitado
+    GameInvitation,         // Invitación de un amigo
+    CancelGameInvitation,   // Cancelar la invitación
+    ErrorGameInvitation,    // Error en la invitación (anfitrión abandona la sala)
     StatsUpdate,            // Estadísticas globales
+    GameStart,              // Comenzarla partida
+    GameUpdate,             // Actualizaciones de la partida
+    GameOver,               // Finalizar partida
+    Chat,                   // Mensaje del chat
+    RematchRequest,         // Solicitud de revancha
+    CancelRematchRequest    // Cancelar revancha
 }
 
 public class WebSocketMessage

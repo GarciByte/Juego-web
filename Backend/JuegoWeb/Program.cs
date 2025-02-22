@@ -1,6 +1,8 @@
-﻿using JuegoWeb.Middlewares;
+﻿using JuegoWeb.MemoryGame;
+using JuegoWeb.Middlewares;
 using JuegoWeb.Models.Database;
 using JuegoWeb.Models.Database.Repositories.Implementations;
+using JuegoWeb.Models.Database.Repositories.Interfaces;
 using JuegoWeb.Models.Mappers;
 using JuegoWeb.Services;
 using JuegoWeb.WebSocketAdvanced;
@@ -33,20 +35,24 @@ namespace JuegoWeb
             builder.Services.AddScoped<ImageRepository>();
             builder.Services.AddScoped<FriendRequestRepository>();
             builder.Services.AddScoped<UserFriendRepository>();
+            builder.Services.AddScoped<IGameHistoryRepository, GameHistoryRepository>();
 
             // Inyección de Mappers
             builder.Services.AddScoped<UserMapper>();
             builder.Services.AddScoped<ImageMapper>();
             builder.Services.AddScoped<FriendRequestMapper>();
+            builder.Services.AddScoped<GameHistoryMapper>();
 
             // Inyección de Servicios
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<ImageService>();
             builder.Services.AddScoped<FriendRequestService>();
+            builder.Services.AddScoped<GameHistoryService>();
             builder.Services.AddSingleton<WebSocketNetwork>();
-            builder.Services.AddSingleton<IWebSocketMessageSender, WebSocketNetwork>();
+            builder.Services.AddSingleton<IWebSocketMessageSender>(provider => provider.GetRequiredService<WebSocketNetwork>());
             builder.Services.AddSingleton<WebSocketNotificationService>();
             builder.Services.AddSingleton<GameRoomService>();
+            builder.Services.AddSingleton<MemoryGameService>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

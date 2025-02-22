@@ -1,5 +1,4 @@
 ﻿using JuegoWeb.Models.Dtos;
-using System.Text.Json;
 
 namespace JuegoWeb.Services;
 
@@ -198,7 +197,6 @@ public class GameRoomService
                         if (room.HostUserId == userId)
                         {
                             _activeRooms.Remove(room);
-                            Console.WriteLine($"Sala {room.RoomId} eliminada por estar vacía (Bot).");
                         }
                         break;
 
@@ -215,7 +213,6 @@ public class GameRoomService
                             else
                             {
                                 _activeRooms.Remove(room);
-                                Console.WriteLine($"Sala {room.RoomId} eliminada por estar vacía.");
                             }
                         }
                         else if (room.GuestUserId == userId)
@@ -234,18 +231,30 @@ public class GameRoomService
             _semaphore.Release();
         }
 
-        Console.WriteLine($"Salas activas: {_activeRooms.Count}");
-
-        string jsonMessage = JsonSerializer.Serialize(room);
-        Console.WriteLine($"Información de la sala: {jsonMessage}");
+        Console.WriteLine($"Salas activas: {_activeRooms.Count}.");
 
         // Notificar la actualización de la sala si sigue activa
         if (room != null && room.RoomType != GameRoomType.Bot && _activeRooms.Contains(room))
         {
-            Console.WriteLine("Enviando notificación de la sala.");
             return room;
         }
 
         return null;
+    }
+
+    // Obtiene la sala a la que pertenece un usuario
+    public async Task<GameRoomDto> GetRoomByUserIdsAsync(int userId)
+    {
+        GameRoomDto room = null;
+        await _semaphore.WaitAsync();
+        try
+        {
+            room = _activeRooms.FirstOrDefault(r => r.HostUserId == userId || r.GuestUserId == userId);
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+        return room;
     }
 }

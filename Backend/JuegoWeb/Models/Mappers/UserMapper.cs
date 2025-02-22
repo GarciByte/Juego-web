@@ -25,6 +25,20 @@ public class UserMapper
         };
     }
 
+    public UserProfileDto UserProfileToDto(User user, HttpRequest request = null)
+    {
+        return new UserProfileDto
+        {
+            UserId = user.Id,
+            Nickname = user.Nickname,
+            Email = user.Email,
+            Avatar = user.Avatar != null ? _imageMapper.ToDto(user.Avatar, request) : null,
+            Role = user.Role,
+            Password = user.Password,
+            Status = UserStatus.Offline,
+        };
+    }
+
     public IEnumerable<UserDto> UsersToDto(IEnumerable<User> users, HttpRequest request = null)
     {
         return users.Select(user => UserToDto(user, request));

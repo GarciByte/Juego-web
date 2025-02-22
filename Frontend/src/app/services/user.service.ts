@@ -24,4 +24,9 @@ export class UserService {
   async getAllUsers(): Promise<Result<User[]>> {
     return this.api.get<User[]>(`User/allUsers`);
   }
+
+  // Obtener historial de partidas de un usuario
+  async GetGameHistories(userId: number): Promise<Result<History[]>> {
+    return this.api.get<History[]>(`GameHistory/user/${userId}`);
+  }
 }

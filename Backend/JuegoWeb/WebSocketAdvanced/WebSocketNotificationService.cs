@@ -5,13 +5,13 @@ namespace JuegoWeb.WebSocketAdvanced;
 public class WebSocketNotificationService
 {
     // Notificar una actualización de la lista de amigos (por añadir o borrar)
-    public async Task NotifyFriendListUpdatedAsync(int userId, List<UserDto> updatedFriends, IWebSocketMessageSender sender)
+    public async Task NotifyFriendListUpdatedAsync(int userId, IWebSocketMessageSender sender)
     {
         var message = new WebSocketMessage
         {
             Type = MsgType.FriendListUpdate,
             Id = userId,
-            Content = updatedFriends
+            Content = null
         };
 
         await sender.SendToUserAsync(userId, message);
@@ -31,15 +31,15 @@ public class WebSocketNotificationService
     }
 
     // Notificar una actualización de las solicitudes de amistad (alguien te envía una)
-    public async Task NotifyFriendRequestUpdatedAsync(int userId, FriendRequestDto friendRequest, IWebSocketMessageSender sender)
+    public async Task NotifyFriendRequestUpdatedAsync(int userId, IWebSocketMessageSender sender)
     {
         var message = new WebSocketMessage
         {
             Type = MsgType.FriendRequestUpdate,
             Id = userId,
-            Content = friendRequest
+            Content = null
         };
-        Console.WriteLine($"Solicitud de amistad de {friendRequest.SenderNickname} actualizada, se le notificará a {friendRequest.ReceiverNickname}");
+
         await sender.SendToUserAsync(userId, message);
     }
 
@@ -49,6 +49,19 @@ public class WebSocketNotificationService
         var message = new WebSocketMessage
         {
             Type = MsgType.GameInvitation,
+            Id = userId,
+            Content = invitation
+        };
+
+        await sender.SendToUserAsync(userId, message);
+    }
+
+    // Notificar la cancelación de una invitación a una partida
+    public async Task NotifyCancelGameInvitationAsync(int userId, GameInvitationDto invitation, IWebSocketMessageSender sender)
+    {
+        var message = new WebSocketMessage
+        {
+            Type = MsgType.CancelGameInvitation,
             Id = userId,
             Content = invitation
         };

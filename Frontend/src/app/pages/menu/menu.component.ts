@@ -47,6 +47,8 @@ export class MenuComponent implements OnInit, OnDestroy {
   totalPlayersSubscription: Subscription;
   activeGamesSubscription: Subscription;
   playersInGamesSubscription: Subscription;
+  friendRequestSubscription: Subscription;
+  friendsSubscription: Subscription;
 
   // Suscripciones generales
   connected$: Subscription;
@@ -99,8 +101,19 @@ export class MenuComponent implements OnInit, OnDestroy {
       this.filterFriends();
     });
 
+    // Recibir notificación de de la lista de amigos
+    this.friendRequestSubscription = this.webSocketService.friendsSubject.subscribe(async () => {
+      await this.loadFriends();
+      this.webSocketService.initMenuData(this.user.userId);
+    });
+
+    // Recibir notificación de solicitud de amistad
+    this.friendsSubscription = this.webSocketService.friendRequestSubject.subscribe(async () => {
+      await this.loadFriendRequests();
+    });
+
     // Invitaciones a partidas
-    this.gameInvitationSubscription = this.webSocketService.gameInvitationSubject.subscribe(async (invitation: GameInvitation) => {
+    this.gameInvitationSubscription = this.webSocketService.gameInvitation$.subscribe(async (invitation: GameInvitation) => {
       await this.handleInvitation(invitation);
     });
 
@@ -125,6 +138,14 @@ export class MenuComponent implements OnInit, OnDestroy {
       this.disconnected$.unsubscribe();
     }
 
+    if (this.error$) {
+      this.error$.unsubscribe();
+    }
+
+    if (this.friendListSubscription) {
+      this.friendListSubscription.unsubscribe();
+    }
+
     if (this.gameInvitationSubscription) {
       this.gameInvitationSubscription.unsubscribe();
     }
@@ -141,40 +162,54 @@ export class MenuComponent implements OnInit, OnDestroy {
       this.playersInGamesSubscription.unsubscribe();
     }
 
-    if (this.friendListSubscription) {
-      this.friendListSubscription.unsubscribe();
+    if (this.friendRequestSubscription) {
+      this.friendRequestSubscription.unsubscribe();
+    }
+
+    if (this.friendsSubscription) {
+      this.friendsSubscription.unsubscribe();
     }
   }
 
   // Invitaciones a partidas
   async handleInvitation(invitation: GameInvitation): Promise<void> {
-    console.log('Invitación recibida:', invitation);
-    const result = await this.userService.getUserById(invitation.FromUserId);
 
-    if (result.success) {
-      const friend = result.data
-      const acceptInvitation = confirm(`Has sido invitado por ${friend.nickname} para jugar una partida. ¿Aceptas la invitación?`);
+    if (invitation) {
+      console.log('Invitación recibida:', invitation);
+      const result = await this.userService.getUserById(invitation.FromUserId);
 
-      if (acceptInvitation) {
+      if (result.success) {
+        const friend = result.data
 
-        const action: GameRoomAction = {
-          Action: RoomAction.Friend,
-          FriendId: invitation.FromUserId,
-        };
-
-        const message: WebSocketMessage = {
-          Type: MsgType.GameRoom,
-          Id: this.user.userId,
-          Content: action,
-        };
-
-        await this.webSocketService.sendRxjs(message);
-        this.router.navigate(['/matchmaking'], { queryParams: { userId: invitation.FromUserId } });
+        Swal.fire({
+          title: `Has sido invitado por ${friend.nickname} para jugar una partida. ¿Aceptas la invitación?`,
+          icon: "info",
+          showCancelButton: true,
+          confirmButtonText: "Sí",
+          cancelButtonText: "No"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.acceptInvitation(invitation);
+          } else {
+            this.cancelInvitation(invitation);
+          }
+        });
 
       } else {
-        console.log("Invitación rechazada.");
+        console.error('Error en la invitación:', result.error);
       }
     }
+  }
+
+  // Acepta la invitación
+  async acceptInvitation(invitation: GameInvitation) {
+    await this.webSocketService.acceptInvitation(this.user, invitation);
+    this.router.navigate(['/matchmaking'], { queryParams: { userId: invitation.FromUserId } });
+  }
+
+  // Rechaza la invitación
+  async cancelInvitation(invitation: GameInvitation) {
+    await this.webSocketService.cancelInvitation(invitation);
   }
 
   // Carga la lista de amigos
@@ -254,6 +289,7 @@ export class MenuComponent implements OnInit, OnDestroy {
       await this.friendRequestService.acceptRequest(request.id);
       await this.loadFriends();
       await this.loadFriendRequests();
+      this.webSocketService.initMenuData(this.user.userId);
 
     } catch (error) {
       console.error('Error al aceptar solicitud:', error);
@@ -277,6 +313,7 @@ export class MenuComponent implements OnInit, OnDestroy {
       try {
         await this.friendRequestService.removeFriend(this.user.userId, friend.userId);
         await this.loadFriends();
+        this.webSocketService.initMenuData(this.user.userId);
 
       } catch (error) {
         console.error('Error al borrar el amigo:', error);

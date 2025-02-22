@@ -13,13 +13,11 @@ public class WebSocketController : ControllerBase
 {
     private readonly WebSocketNetwork _websocketNetwork;
     private readonly UserService _userService;
-    private readonly FriendRequestService _friendRequestService;
 
-    public WebSocketController(WebSocketNetwork websocketNetwork, UserService userService, FriendRequestService friendRequestService)
+    public WebSocketController(WebSocketNetwork websocketNetwork, UserService userService)
     {
         _websocketNetwork = websocketNetwork;
         _userService = userService;
-        _friendRequestService = friendRequestService;
     }
 
     [Authorize]
@@ -41,11 +39,8 @@ public class WebSocketController : ControllerBase
             // Aceptamos la solicitud
             WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
-            // Obtener los amigos del usuario
-            var friends = await _friendRequestService.GetFriendsAsync(user.UserId);
-
             // Manejamos la solicitud.
-            await _websocketNetwork.HandleAsync(webSocket, user, friends);
+            await _websocketNetwork.HandleAsync(webSocket, user);
         }
         // En caso contrario la rechazamos
         else

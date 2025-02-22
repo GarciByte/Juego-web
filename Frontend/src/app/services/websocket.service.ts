@@ -8,12 +8,16 @@ import { GameRoom } from '../models/game-room';
 import { GameInvitation } from '../models/game-invitation';
 import { GameRoomAction, RoomAction } from '../models/game-room-action';
 import Swal from 'sweetalert2';
+import { GameService } from './game.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class WebsocketService {
 
+  constructor(private gameService: GameService) { }
+
+  private readonly USER_KEY = 'user';
   rxjsSocket: WebSocketSubject<WebSocketMessage> | null = null;
 
   // Eventos de conexión
@@ -30,7 +34,15 @@ export class WebsocketService {
   public gameRoom$: Observable<GameRoom | null> = this.gameRoomSubject.asObservable();
 
   // Recibir invitaciones a partidas
-  public gameInvitationSubject = new Subject<GameInvitation>();
+  private gameInvitationSubject = new BehaviorSubject<GameInvitation | null>(null);
+  public gameInvitation$ = this.gameInvitationSubject.asObservable();
+
+  // Recibir notificación de cancelación de la invitación
+  public cancelGameInvitationSubject = new Subject<void>();
+
+  // Recibir notificación de error de la invitación
+  private errorGameInvitationSubject = new BehaviorSubject<WebSocketMessage | null>(null);
+  public  errorGameInvitation$ = this.errorGameInvitationSubject.asObservable();
 
   // Recibir notificación de partida empezada
   public gameStartedSubject = new Subject<void>();
@@ -43,6 +55,12 @@ export class WebsocketService {
 
   // Recibir la cantidad de jugadores actualmente en partidas
   public playersInGamesSubject = new Subject<number>();
+
+  // Recibir notificación de solicitud de amistad
+  public friendRequestSubject = new Subject<void>();
+
+  // Recibir notificación de de la lista de amigos
+  public friendsSubject = new Subject<void>();
 
 
   private onConnected() {
@@ -86,6 +104,23 @@ export class WebsocketService {
         this.gameInvitationSubject.next(message.Content);
         break;
 
+      case MsgType.CancelGameInvitation: // Cancelar una invitación a una partida
+        const user: User = JSON.parse(localStorage.getItem(this.USER_KEY) || sessionStorage.getItem(this.USER_KEY));
+
+        if (user.userId == message.Content.FromUserId) {
+          this.cancelGameInvitationSubject.next();
+          console.log("Se ha rechazado la invitación enviada.");
+        } else {
+          this.gameInvitationSubject.next(null);
+          console.log("Se ha cancelado y eliminado la invitación.");
+        }
+        break;
+
+      case MsgType.ErrorGameInvitation: // Error en la invitación
+      console.log("ErrorGameInvitation ejecutado en el servicio.");
+        this.errorGameInvitationSubject.next(message);
+        break;
+
       case MsgType.GameRoom: // Crear una sala o actualizarla
         this.updateGameRoom(message.Content);
         break;
@@ -94,10 +129,76 @@ export class WebsocketService {
         this.gameStartedSubject.next();
         break;
 
+      case MsgType.FriendListUpdate: // Actualización de la lista de amigos
+        this.friendsSubject.next();
+        break;
+
+      case MsgType.FriendRequestUpdate: // Actualización de las solicitudes de amistad
+        this.friendRequestSubject.next();
+        break;
+
+      // Mensajes redirigidos al servicio del juego
+      case MsgType.GameStart:
+      case MsgType.GameUpdate:
+      case MsgType.GameOver:
+      case MsgType.Chat:
+      case MsgType.CancelRematchRequest:
+        this.gameService.onMessageReceived(message);
+        break;
+
       default:
-        console.error("Mensaje no reconocido:", message.Type);
+        console.warn("Mensaje no reconocido:", message.Type);
         break;
     }
+  }
+
+  // Acepta una invitación
+  async acceptInvitation(user: User, invitation: GameInvitation) {
+    this.gameInvitationSubject.next(null);
+
+    const action: GameRoomAction = {
+      Action: RoomAction.Friend,
+      FriendId: invitation.FromUserId,
+    };
+
+    const message: WebSocketMessage = {
+      Type: MsgType.GameRoom,
+      Id: user.userId,
+      Content: action,
+    };
+
+    this.sendRxjs(message);
+  }
+
+  // Notifica al usuario invitado un error en la invitación
+  async errorGameInvitation() {
+    this.errorGameInvitationSubject.next(null);
+
+    Swal.fire({
+      title: "El anfitrión abandonó la sala",
+      icon: "error",
+      confirmButtonText: "Aceptar"
+    });
+  }
+
+  // Rechaza una invitación
+  async cancelInvitation(invitation: GameInvitation) {
+    console.log("Invitación eliminada.");
+
+    this.gameInvitationSubject.next(null);
+
+    const cancelInvitation: GameInvitation = {
+      FromUserId: invitation.FromUserId,
+      ToUserId: invitation.ToUserId,
+    };
+
+    const message: WebSocketMessage = {
+      Type: MsgType.CancelGameInvitation,
+      Id: invitation.ToUserId,
+      Content: cancelInvitation,
+    };
+
+    this.sendRxjs(message);
   }
 
   // Actualizar la información de la sala
@@ -149,7 +250,7 @@ export class WebsocketService {
     Swal.fire({
       title: "Se ha perdido la conexión con el servidor",
       icon: "error",
-      confirmButtonText: "Vale",
+      confirmButtonText: "Aceptar",
     });
 
     this.error.next();

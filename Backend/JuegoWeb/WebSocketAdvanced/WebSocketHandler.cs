@@ -1,4 +1,6 @@
-﻿using JuegoWeb.Models.Dtos;
+﻿using JuegoWeb.Models.Database.Entities;
+using JuegoWeb.Models.Dtos;
+using JuegoWeb.Services;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -10,9 +12,9 @@ public class WebSocketHandler : IDisposable
     private const int BUFFER_SIZE = 4096;
     private readonly WebSocket _webSocket;
     private readonly byte[] _buffer;
+    private readonly IServiceProvider _serviceProvider;
 
     public UserDto User { get; private set; }
-    public List<UserDto> Friends { get; private set; }
     public int Id { get; init; }
     public bool IsOpen => _webSocket.State == WebSocketState.Open;
 
@@ -20,13 +22,13 @@ public class WebSocketHandler : IDisposable
     public event Func<WebSocketHandler, WebSocketMessage, Task> MessageReceived;
     public event Func<WebSocketHandler, Task> Disconnected;
 
-    public WebSocketHandler(int id, WebSocket webSocket, UserDto user, List<UserDto> friends)
+    public WebSocketHandler(int id, WebSocket webSocket, UserDto user, IServiceProvider serviceProvider)
     {
         Id = id;
         _webSocket = webSocket;
         _buffer = new byte[BUFFER_SIZE];
         User = user;
-        Friends = friends;
+        _serviceProvider = serviceProvider;
     }
 
     public async Task HandleAsync()
@@ -87,7 +89,7 @@ public class WebSocketHandler : IDisposable
         // Decodificamos el mensaje
         string jsonMessage = Encoding.UTF8.GetString(textStream.ToArray());
 
-        Console.WriteLine($"Mensaje recibido de {User.Nickname}: {jsonMessage}");
+        //Console.WriteLine($"Mensaje recibido de {User.Nickname}: {jsonMessage}");
 
         try
         {
@@ -113,7 +115,7 @@ public class WebSocketHandler : IDisposable
         {
             string jsonMessage = JsonSerializer.Serialize(message);
 
-            Console.WriteLine($"Enviando mensaje para {User.Nickname}: {jsonMessage}");
+            //Console.WriteLine($"Enviando mensaje para {User.Nickname}: {jsonMessage}");
 
             // Convertimos el mensaje a bytes y lo enviamos
             byte[] bytes = Encoding.UTF8.GetBytes(jsonMessage);
@@ -123,6 +125,16 @@ public class WebSocketHandler : IDisposable
         {
             Console.WriteLine($"No se ha podido enviar a {User.Nickname} el mensaje.");
         }
+    }
+
+    // Obtener todos los amigos del usuario
+    public async Task<List<UserDto>> GetFriendsAsync(int userId)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var friendRequestService = scope.ServiceProvider.GetRequiredService<FriendRequestService>();
+        var friends = await friendRequestService.GetFriendsAsync(userId);
+
+        return friends;
     }
 
     // Cerrar el WebSocket

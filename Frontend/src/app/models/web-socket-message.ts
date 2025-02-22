@@ -1,13 +1,20 @@
 export enum MsgType {
     Connection = 'Connection',
-    Disconnect = 'Disconnect',
     FriendListUpdate = 'FriendListUpdate',
     FriendStatusUpdate = 'FriendStatusUpdate',
     FriendRequestUpdate = 'FriendRequestUpdate',
     GameRoom = 'GameRoom',
     StartGame = 'StartGame',
     GameInvitation = 'GameInvitation',
-    StatsUpdate = 'StatsUpdate'
+    CancelGameInvitation = 'CancelGameInvitation',
+    ErrorGameInvitation = 'ErrorGameInvitation',
+    StatsUpdate = 'StatsUpdate',
+    GameStart = 'GameStart',
+    GameUpdate = 'GameUpdate',
+    GameOver = 'GameOver',
+    Chat = 'Chat',
+    RematchRequest = 'RematchRequest',
+    CancelRematchRequest = 'CancelRematchRequest'
 }
 
 export interface WebSocketMessage {

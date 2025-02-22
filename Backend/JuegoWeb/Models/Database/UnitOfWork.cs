@@ -1,4 +1,5 @@
 ﻿using JuegoWeb.Models.Database.Repositories.Implementations;
+using JuegoWeb.Models.Database.Repositories.Interfaces;
 
 namespace JuegoWeb.Models.Database
 {
@@ -14,18 +15,22 @@ namespace JuegoWeb.Models.Database
 
         public UserFriendRepository UserFriendRepository { get; init; }
 
+        public IGameHistoryRepository IGameHistoryRepository { get; init; }
+
         public UnitOfWork(
             JuegoWebContext context,
             UserRepository userRepository,
              ImageRepository imageRepository,
              FriendRequestRepository friendRequestRepository,
-             UserFriendRepository userFriendRepository)
+             UserFriendRepository userFriendRepository,
+             IGameHistoryRepository gameHistoryRepository)
         {
             _context = context;
             UserRepository = userRepository;
             ImageRepository = imageRepository;
             FriendRequestRepository = friendRequestRepository;
             UserFriendRepository = userFriendRepository;
+            IGameHistoryRepository = gameHistoryRepository;
         }
 
         public async Task<bool> SaveAsync()

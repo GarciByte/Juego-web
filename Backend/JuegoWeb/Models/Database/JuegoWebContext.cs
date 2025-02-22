@@ -16,6 +16,8 @@ public class JuegoWebContext : DbContext
 
     public DbSet<UserFriend> UserFriends { get; set; }
 
+    public DbSet<GameHistory> GameHistory { get; set; }
+
     // Crear archivo SQLite
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

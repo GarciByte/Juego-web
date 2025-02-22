@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
@@ -10,7 +10,7 @@ import { WebsocketService } from '../../services/websocket.service';
   templateUrl: './admin-profile.component.html',
   styleUrl: './admin-profile.component.css'
 })
-export class AdminProfileComponent implements OnInit {
+export class AdminProfileComponent implements OnInit, OnDestroy {
 
   // Suscripciones generales
     error$: Subscription;
@@ -33,6 +33,12 @@ export class AdminProfileComponent implements OnInit {
       this.authService.logout();
       this.router.navigate(['/']);
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.error$) {
+      this.error$.unsubscribe();
+    }
   }
 
 

@@ -54,4 +54,12 @@ public class ImagesController : ControllerBase
 
         return Ok(_imageMapper.ToDto(imageUpdated));
     }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ImageDto>> DeleteAsync(int id)
+    {
+        await _imageService.DeleteAsync(id);
+
+        return NoContent();
+    }
 }
