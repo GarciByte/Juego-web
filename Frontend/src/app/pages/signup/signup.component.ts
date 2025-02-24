@@ -74,14 +74,10 @@ export class SignupComponent implements OnInit {
       const signupResult = await this.authService.signup(formData); // Registro
 
       if (signupResult.success) {
-        console.log('Registro exitoso', signupResult);
-
         const authData = { nickname: "", email: this.myForm.get('email').value, password: this.myForm.get('password').value };
         const loginResult = await this.authService.login(authData, false); // Login
 
         if (loginResult.success) {
-          console.log('Inicio de sesión exitoso', loginResult);
-
           const user = this.authService.getUser();
           const nickname = user ? user.nickname : null;
 
@@ -109,7 +105,6 @@ export class SignupComponent implements OnInit {
         }
 
       } else {
-        console.error(signupResult);
         this.throwError("Error en el registro");
       }
 

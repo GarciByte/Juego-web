@@ -12,6 +12,7 @@ public class GameHistoryMapper
             Id = history.Id,
             GameName = history.GameName,
             Score = history.Score,
+            OpponentScore = history.OpponentScore,
             Players = history.Players,
             Result = history.Result,
             Duration = history.Duration,

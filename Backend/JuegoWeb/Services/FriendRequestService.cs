@@ -112,6 +112,13 @@ public class FriendRequestService
         return requests.Select(_friendRequestMapper.FriendRequestToDto).ToList();
     }
 
+    // Obtener todas las solicitudes de amistad enviadas por un usuario que no han sido aceptadas
+    public async Task<List<FriendRequestDto>> GetPendingSentRequestsAsync(int userId)
+    {
+        var requests = await _unitOfWork.FriendRequestRepository.GetPendingSentRequestsForUserAsync(userId);
+        return requests.Select(_friendRequestMapper.FriendRequestToDto).ToList();
+    }
+
     // Obtener todos los amigos de un usuario
     public async Task<List<UserDto>> GetFriendsAsync(int userId)
     {

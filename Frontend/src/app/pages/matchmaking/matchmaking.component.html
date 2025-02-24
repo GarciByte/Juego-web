@@ -62,7 +62,7 @@
                         <select id="friendSelect" [(ngModel)]="selectedFriendId">
                             <option *ngFor="let friend of friends" [value]="friend.userId"
                                 [disabled]="friend.status !== 'Online'">
-                                {{ friend.nickname }} ({{ friend.status }})
+                                {{ friend.nickname }}
                             </option>
                         </select>
                     </div>

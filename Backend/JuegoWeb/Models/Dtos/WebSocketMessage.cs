@@ -12,7 +12,6 @@ public enum MsgType
     StartGame,              // Notificar del inicio de la partida al usuario invitado
     GameInvitation,         // Invitación de un amigo
     CancelGameInvitation,   // Cancelar la invitación
-    ErrorGameInvitation,    // Error en la invitación (anfitrión abandona la sala)
     StatsUpdate,            // Estadísticas globales
     GameStart,              // Comenzarla partida
     GameUpdate,             // Actualizaciones de la partida

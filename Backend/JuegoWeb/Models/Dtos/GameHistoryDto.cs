@@ -8,6 +8,8 @@ public class GameHistoryDto
 
     public int Score { get; set; }
 
+    public int OpponentScore { get; set; }
+
     public string Players { get; set; }
 
     public string Result { get; set; }

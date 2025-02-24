@@ -237,6 +237,7 @@ public class Seeder
             {
                 GameName = "Juego de Memoria",
                 Score = 8,
+                OpponentScore = 0,
                 Players = $"{david.Id}, {usuario.Id}",
                 Result = "Ganador",
                 Duration = TimeSpan.FromMinutes(15),
@@ -246,6 +247,7 @@ public class Seeder
             {
                 GameName = "Juego de Memoria",
                 Score = 2,
+                OpponentScore = 6,
                 Players = $"{david.Id}, {samuel.Id}",
                 Result = "Perdedor",
                 Duration = TimeSpan.FromMinutes(25),

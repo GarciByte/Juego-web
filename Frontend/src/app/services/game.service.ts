@@ -44,7 +44,7 @@ export class GameService {
         break
 
       default:
-        console.warn("Mensaje no reconocido:", message.Type);
+        //console.warn("Mensaje no reconocido:", message.Type);
         break;
     }
   }

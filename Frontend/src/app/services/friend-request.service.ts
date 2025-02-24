@@ -26,9 +26,14 @@ export class FriendRequestService {
     return this.api.post<void>(`FriendRequest/reject?requestId=${requestId}`);
   }
 
-  // Obtener solicitudes de amistad pendientes
+  // Obtener todas las solicitudes de amistad pendientes de un usuario
   async getPendingRequests(userId: number): Promise<Result<FriendRequest[]>> {
     return this.api.get<FriendRequest[]>(`FriendRequest/pending?userId=${userId}`);
+  }
+
+  // Obtener todas las solicitudes de amistad enviadas por un usuario que no han sido aceptadas
+  async getPendingSentRequests(userId: number): Promise<Result<FriendRequest[]>> {
+    return this.api.get<FriendRequest[]>(`FriendRequest/pending-sent?userId=${userId}`);
   }
 
   // Obtener la lista de amigos

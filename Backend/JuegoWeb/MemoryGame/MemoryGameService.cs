@@ -418,6 +418,8 @@ public class MemoryGameService
 
         foreach (var history in gameHistoryDtoList)
         {
+            Console.WriteLine($"Punuación del jugador {history.UserId}: {history.Score}.");
+            Console.WriteLine($"Punuación del oponente para {history.UserId}: {history.OpponentScore}.");
             await SendWebSocketMessageAsync(history.UserId, new WebSocketMessage
             {
                 Type = MsgType.GameOver,
@@ -441,7 +443,7 @@ public class MemoryGameService
 
         foreach (var player in game.Players.Where(p => !p.IsBot))
         {
-            string result;
+            string result = "";
 
             // Si a un usuario se le acabó el tiempo o abandonó la partida
             if (timeoutPlayerId != 0)
@@ -479,6 +481,17 @@ public class MemoryGameService
                 }
             }
 
+            // Se obtiene la puntuación del oponente
+            int opponentScore = 0;
+            if (player.UserId == game.Players[0].UserId)
+            {
+                opponentScore = game.Players[1].Score;
+            }
+            else
+            {
+                opponentScore = game.Players[0].Score;
+            }
+
             // Calcula la duración de la partida
             TimeSpan timeSpan = game.EndTime.Value - game.StartTime;
             TimeSpan duration = new(timeSpan.Hours, timeSpan.Minutes, timeSpan.Seconds);
@@ -487,6 +500,7 @@ public class MemoryGameService
             {
                 GameName = "Juego de Memoria",
                 Score = player.Score,
+                OpponentScore = opponentScore,
                 Players = playersStr,
                 Result = result,
                 Duration = duration,

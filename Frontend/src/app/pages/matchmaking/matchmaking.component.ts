@@ -5,7 +5,7 @@ import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user';
 import { environment } from '../../../environments/environment.development';
 import { Subscription } from 'rxjs';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GameRoom, GameRoomType } from '../../models/game-room';
 import { GameRoomAction, RoomAction } from '../../models/game-room-action';
@@ -26,8 +26,7 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
   public readonly IMG_URL = environment.apiImg;
   user: User;
   friends: User[] = [];
-
-  invitation: GameInvitation | null = null; // Invitación de partida enviada
+  invitation: GameInvitation | null = null; // Invitación de partida
 
   hostPlayer: User; // El anfitrión
   guestPlayer: User | null = null; // El invitado
@@ -36,6 +35,7 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
   invitationReceived: boolean = false; // Si se accedió con una invitación
   invitationSent: boolean = false; // Si se envió una invitación
   isSearching: boolean = false; // Si se está buscando un oponente aleatorio
+  reset: boolean = false; // Resetear sala cuando un usuario la abandona
 
   // Sala de juego
   gameRoom: GameRoom | null = null;
@@ -66,7 +66,8 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private webSocketService: WebsocketService,
     private friendRequestService: FriendRequestService,
-    private userService: UserService
+    private userService: UserService,
+    private location: Location
   ) { }
 
   async ngOnInit(): Promise<void> {
@@ -91,11 +92,12 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Comprobar parámetros de ruta para saber si se accedió mediante una invitación
-    this.routeSubscription = this.route.queryParams.subscribe(async (params) => {
+     // Comprobar parámetros de ruta para saber si se accedió mediante una invitación
+     this.routeSubscription = this.route.queryParams.subscribe(async (params) => {
       if (params['userId']) {
         const userId = Number(params['userId']);
         await this.handleInvitation(userId);
+
       } else {
         this.webSocketService.clearGameRoom(this.user.userId);
       }
@@ -104,68 +106,76 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
     // Solicitar los datos de la sala
     this.roomSubscription = this.webSocketService.gameRoom$.subscribe(async (room) => {
       if (room) {
-        this.gameRoom = room;
 
-        if (room.RoomType === GameRoomType.Bot) {
-          this.canStartGame = true;
-          this.startGame()
-        }
+        await this.checkRoomUpdates(room);
 
-        if (room.RoomType === GameRoomType.Friend && room.GuestUserId !== null && room.GuestUserId !== undefined) {
-          const result = await this.userService.getUserById(room.GuestUserId);
-          if (result.success) {
-            this.guestPlayer = result.data;
+        if (!this.reset) {
+          this.gameRoom = room;
+
+          if (room.RoomType === GameRoomType.Bot) {
             this.canStartGame = true;
-          } else {
-            console.error("Se ha producido un error", result.error);
+            this.startGame()
           }
-        }
 
-        if (room.RoomType === GameRoomType.Random && room.GuestUserId !== null && room.GuestUserId !== undefined) {
-          if (this.user.userId === room.HostUserId) {
-            this.invitationReceived = false;
-            this.isHost = true;
-            this.hostPlayer = this.user;
-
-            const guestUserId = await this.userService.getUserById(room.GuestUserId);
-
-            if (guestUserId.success) {
-              this.guestPlayer = guestUserId.data;
+          if (room.RoomType === GameRoomType.Friend && room.GuestUserId !== null && room.GuestUserId !== undefined) {
+            const result = await this.userService.getUserById(room.GuestUserId);
+            if (result.success) {
+              this.guestPlayer = result.data;
               this.canStartGame = true;
-
             } else {
-              console.error("Se ha producido un error", guestUserId.error);
-            }
-
-          } else {
-            this.invitationReceived = false;
-            this.isHost = false;
-            this.guestPlayer = this.user;
-            this.guestPlayer.avatar.url = this.user.avatar.url;
-
-            const hostUserId = await this.userService.getUserById(room.HostUserId);
-
-            if (hostUserId.success) {
-              this.hostPlayer = hostUserId.data;
-              this.canStartGame = true;
-
-            } else {
-              console.error("Se ha producido un error", hostUserId.error);
+              //console.error("Se ha producido un error", result.error);
+              this.throwError("Se ha producido un error");
             }
           }
-          this.startGame();
+
+          if (room.RoomType === GameRoomType.Random && room.GuestUserId !== null && room.GuestUserId !== undefined) {
+            if (this.user.userId === room.HostUserId) {
+              this.invitationReceived = false;
+              this.isHost = true;
+              this.hostPlayer = this.user;
+
+              const guestUserId = await this.userService.getUserById(room.GuestUserId);
+
+              if (guestUserId.success) {
+                this.guestPlayer = guestUserId.data;
+                this.canStartGame = true;
+
+              } else {
+                //console.error("Se ha producido un error", guestUserId.error);
+                this.throwError("Se ha producido un error");
+              }
+
+            } else {
+              this.invitationReceived = false;
+              this.isHost = false;
+              this.guestPlayer = this.user;
+              this.guestPlayer.avatar.url = this.user.avatar.url;
+
+              const hostUserId = await this.userService.getUserById(room.HostUserId);
+
+              if (hostUserId.success) {
+                this.hostPlayer = hostUserId.data;
+                this.canStartGame = true;
+
+              } else {
+                //console.error("Se ha producido un error", hostUserId.error);
+                this.throwError("Se ha producido un error");
+              }
+            }
+            this.startGame();
+          }
+
+        } else {
+          this.reset = false;
         }
 
         this.isSearching = false;
-        console.log("Sala actualizada:", this.gameRoom);
-        console.log("hostPlayer: ", this.hostPlayer);
-        console.log("guestPlayer: ", this.guestPlayer);
       }
     });
 
     // Desconexión del usuario
     this.disconnected$ = this.webSocketService.disconnected.subscribe(() => {
-      console.error("Desconectado del WebSocket");
+      console.warn('Desconectado del Servidor');
     });
 
     // Error del WebSocket
@@ -187,7 +197,6 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
 
     // Cancela la invitación a una partida
     this.cancelGameInvitationSubject = this.webSocketService.cancelGameInvitationSubject.subscribe(() => {
-
       Swal.fire({
         title: "La invitación ha sido rechazada",
         icon: "info",
@@ -197,14 +206,45 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
       this.invitationSent = false;
       this.invitation = null;
     });
+  }
 
-    // Notifica al usuario invitado en caso de abandono de la sala del anfitrión
-    this.errorGameInvitationSubject = this.webSocketService.errorGameInvitation$.subscribe(async (message: WebSocketMessage) => {
-      if (message) {
-        await this.webSocketService.errorGameInvitation();
-        this.router.navigate(['/menu']);
+  // Comprobar si un usuario ha abandonado la sala
+  async checkRoomUpdates(newRoom: GameRoom): Promise<void> {
+    if (this.gameRoom) {
+
+      // El usuario invitado es el que ha abandonado la sala
+      if (this.gameRoom.GuestUserId && !newRoom.GuestUserId) {
+        Swal.fire({
+          title: 'El usuario invitado ha abandonado la sala',
+          icon: 'info',
+          confirmButtonText: 'Aceptar'
+        });
       }
-    });
+
+      //  El usuario host es el que ha abandonado la sala
+      if (this.gameRoom.HostUserId !== newRoom.HostUserId) {
+        if (newRoom.HostUserId === this.user.userId) {
+          Swal.fire({
+            title: 'El usuario anfitrión ha abandonado la sala',
+            icon: 'info',
+            confirmButtonText: 'Aceptar'
+          });
+        }
+      }
+
+      this.invitation = null;
+      this.hostPlayer = this.user;
+      this.guestPlayer = null;
+      this.isHost = true;
+      this.invitationSent = false;
+      this.invitationReceived = false;
+      this.gameRoom = null;
+      this.selectedFriendId = null;
+      this.canStartGame = false;
+      this.reset = true;
+
+      this.webSocketService.clearGameRoom(this.user.userId);
+    }
   }
 
   // Invitaciones a partidas
@@ -216,8 +256,14 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
       this.invitationReceived = true;
       this.isHost = false;
 
+      // Borra el parámetro de ruta
+      const currentUrl = this.location.path();
+      const baseUrl = currentUrl.split('?')[0];
+      this.location.replaceState(baseUrl);
     } else {
-      console.error("Se ha producido un error", result.error);
+
+      //console.error("Se ha producido un error", result.error);
+      this.throwError("Se ha producido un error");
     }
   }
 
@@ -229,7 +275,8 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
       this.friends = result.data;
 
     } catch (error) {
-      console.error('Error al cargar amigos:', error);
+      //console.error('Error al cargar amigos:', error);
+      this.throwError("Se ha producido un error al cargar la lista de amigos");
     }
   }
 

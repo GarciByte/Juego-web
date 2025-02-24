@@ -12,8 +12,6 @@ import { FormsModule } from '@angular/forms';
 import { FriendRequest } from '../../models/friend-request';
 import { UserService } from '../../services/user.service';
 import { GameInvitation } from '../../models/game-invitation';
-import { GameRoomAction, RoomAction } from '../../models/game-room-action';
-import { WebSocketMessage, MsgType } from '../../models/web-socket-message';
 
 @Component({
   selector: 'app-menu',
@@ -31,6 +29,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   friends: User[] = [];
 
   friendRequests: FriendRequest[] = [];
+  friendRequestsSent: FriendRequest[] = [];
   filteredFriends: User[] = [];
   filteredUsers: User[] = [];
 
@@ -42,6 +41,9 @@ export class MenuComponent implements OnInit, OnDestroy {
   playersInGames: number = 0;
 
   // Suscripciones a los datos necesarios
+  connected$: Subscription;
+  disconnected$: Subscription;
+  error$: Subscription;
   friendListSubscription: Subscription;
   gameInvitationSubscription: Subscription;
   totalPlayersSubscription: Subscription;
@@ -49,11 +51,8 @@ export class MenuComponent implements OnInit, OnDestroy {
   playersInGamesSubscription: Subscription;
   friendRequestSubscription: Subscription;
   friendsSubscription: Subscription;
+  errorGameInvitationSubject: Subscription;
 
-  // Suscripciones generales
-  connected$: Subscription;
-  disconnected$: Subscription;
-  error$: Subscription;
 
   constructor(
     private router: Router,
@@ -74,6 +73,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     // Cargar la lista de amigos y solicitudes de amistad
     await this.loadFriends();
     await this.loadFriendRequests();
+    await this.loadFriendRequestsSent();
 
     // Solicitar los datos necesarios
     if (this.webSocketService.isConnectedRxjs()) {
@@ -86,7 +86,7 @@ export class MenuComponent implements OnInit, OnDestroy {
 
     // Desconexión del usuario
     this.disconnected$ = this.webSocketService.disconnected.subscribe(() => {
-      console.warn('Desconectado del WebSocket');
+      console.warn('Desconectado del Servidor');
     });
 
     // Error del WebSocket
@@ -110,11 +110,21 @@ export class MenuComponent implements OnInit, OnDestroy {
     // Recibir notificación de solicitud de amistad
     this.friendsSubscription = this.webSocketService.friendRequestSubject.subscribe(async () => {
       await this.loadFriendRequests();
+      await this.loadFriendRequestsSent();
     });
 
     // Invitaciones a partidas
     this.gameInvitationSubscription = this.webSocketService.gameInvitation$.subscribe(async (invitation: GameInvitation) => {
       await this.handleInvitation(invitation);
+    });
+
+    // Cancela la invitación a una partida
+    this.errorGameInvitationSubject = this.webSocketService.errorGameInvitationSubject.subscribe(() => {
+      Swal.fire({
+        title: "Invitación cancelada",
+        icon: "info",
+        confirmButtonText: "Aceptar"
+      });
     });
 
     // Estadísticas del juego
@@ -169,13 +179,16 @@ export class MenuComponent implements OnInit, OnDestroy {
     if (this.friendsSubscription) {
       this.friendsSubscription.unsubscribe();
     }
+
+    if (this.errorGameInvitationSubject) {
+      this.errorGameInvitationSubject.unsubscribe();
+    }
   }
 
   // Invitaciones a partidas
   async handleInvitation(invitation: GameInvitation): Promise<void> {
 
     if (invitation) {
-      console.log('Invitación recibida:', invitation);
       const result = await this.userService.getUserById(invitation.FromUserId);
 
       if (result.success) {
@@ -196,7 +209,8 @@ export class MenuComponent implements OnInit, OnDestroy {
         });
 
       } else {
-        console.error('Error en la invitación:', result.error);
+        //console.error('Error en la invitación:', result.error);
+        this.throwError("Se ha producido un error con la invitación");
       }
     }
   }
@@ -219,10 +233,10 @@ export class MenuComponent implements OnInit, OnDestroy {
       this.webSocketService.setFriendList(result.data);
       this.friends = result.data;
       this.filterFriends();
-      //console.log("Lista de amigos:", this.friends);
 
     } catch (error) {
-      console.error('Error al cargar amigos:', error);
+      //console.error('Error al cargar amigos:', error);
+      this.throwError("Se ha producido un error al cargar la lista de amigos");
     }
   }
 
@@ -244,10 +258,22 @@ export class MenuComponent implements OnInit, OnDestroy {
     try {
       const result = await this.friendRequestService.getPendingRequests(this.user.userId);
       this.friendRequests = result.data;
-      //console.log("Solicitudes de amistad:", this.friendRequests)
 
     } catch (error) {
-      console.error('Error al cargar solicitudes de amistad:', error);
+      //console.error('Error al cargar solicitudes de amistad:', error);
+      this.throwError("Se ha producido un error al cargar las solicitudes de amistad");
+    }
+  }
+
+  // Carga las solicitudes de amistad enviadas
+  async loadFriendRequestsSent(): Promise<void> {
+    try {
+      const result= await this.friendRequestService.getPendingSentRequests(this.user.userId);
+      this.friendRequestsSent = result.data;
+
+    } catch (error) {
+      //console.error('Error al cargar solicitudes de amistad enviadas:', error);
+      this.throwError("Se ha producido un error al cargar las solicitudes de amistad enviadas");
     }
   }
 
@@ -259,14 +285,21 @@ export class MenuComponent implements OnInit, OnDestroy {
 
       try {
         const result = await this.userService.searchUsers(this.searchQuery);
-        this.filteredUsers = result.data;
+        let users = result.data;
+        users = users.filter(user => user.userId !== this.user.userId);
+        this.filteredUsers = users;
 
         if (this.filteredUsers.length === 0) {
-          console.log("No hay resultados");
+          Swal.fire({
+            title: "No hay resultados",
+            icon: "info",
+            confirmButtonText: "Aceptar"
+          });
         }
 
       } catch (error) {
-        console.error('Error al buscar usuarios:', error);
+        //console.error('Error al buscar usuarios:', error);
+        this.throwError("Se ha producido un error al buscar usuarios");
         this.filteredUsers = [];
       }
     }
@@ -275,11 +308,25 @@ export class MenuComponent implements OnInit, OnDestroy {
   // Envía una solicitud de amistad
   async sendFriendRequest(user: User): Promise<void> {
     try {
-      await this.friendRequestService.sendRequest(this.user.userId, user.userId);
-      alert("Solicitud enviada");
+      const result = await this.friendRequestService.sendRequest(this.user.userId, user.userId);
+
+      if (result.error === "OK") {
+        Swal.fire({
+          title: "Se ha enviado la solicitud de amistad",
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true
+        });
+        await this.loadFriendRequestsSent();
+
+      } else {
+        this.throwError("Se ha producido un error al enviar la solicitud");
+      }
 
     } catch (error) {
-      console.error('Error al enviar solicitud:', error);
+      //console.error('Error al enviar solicitud:', error);
+      this.throwError("Se ha producido un error al enviar la solicitud");
     }
   }
 
@@ -289,10 +336,12 @@ export class MenuComponent implements OnInit, OnDestroy {
       await this.friendRequestService.acceptRequest(request.id);
       await this.loadFriends();
       await this.loadFriendRequests();
+      await this.loadFriendRequestsSent();
       this.webSocketService.initMenuData(this.user.userId);
 
     } catch (error) {
-      console.error('Error al aceptar solicitud:', error);
+      //console.error('Error al aceptar solicitud:', error);
+      this.throwError("Se ha producido un error al aceptar la solicitud");
     }
   }
 
@@ -301,35 +350,70 @@ export class MenuComponent implements OnInit, OnDestroy {
     try {
       await this.friendRequestService.rejectRequest(request.id);
       await this.loadFriendRequests();
+      await this.loadFriendRequestsSent();
 
     } catch (error) {
-      console.error('Error al rechazar solicitud:', error);
+      //console.error('Error al rechazar solicitud:', error);
+      this.throwError("Se ha producido un error al rechazar la solicitud");
     }
   }
 
   // Elimina un amigo
   async deletefriend(friend: any): Promise<void> {
-    if (confirm(`¿Estás seguro de eliminar a ${friend.nickname} de tus amigos?`)) {
-      try {
-        await this.friendRequestService.removeFriend(this.user.userId, friend.userId);
-        await this.loadFriends();
-        this.webSocketService.initMenuData(this.user.userId);
+    Swal.fire({
+      title: `¿Estás seguro de que quieres eliminar a ${friend.nickname} de tus amigos?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí",
+      cancelButtonText: "No"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await this.friendRequestService.removeFriend(this.user.userId, friend.userId);
+          await this.loadFriends();
+          this.webSocketService.initMenuData(this.user.userId);
 
-      } catch (error) {
-        console.error('Error al borrar el amigo:', error);
+        } catch (error) {
+          //console.error('Error al borrar el amigo:', error);
+          this.throwError("Se ha producido un error al borrar el amigo");
+        }
+      } else {
+        Swal.close();
       }
-    }
+    });
+  }
+
+  // Verifica si el usuario buscado ya es amigo
+  isFriend(user: User): boolean {
+    return this.friends.some(friend => friend.userId === user.userId);
+  }
+
+  // Verifica si ya se le ha enviado una solicitud de amistad al usuario buscado
+  hasPendingSentFriendRequest(user: User): boolean {
+    return this.friendRequestsSent.some(request =>
+      request.senderId === this.user.userId && request.receiverId === user.userId
+    );
+  }
+
+  // Verifica si ya se ha recibido una solicitud de amistad del usuario buscado
+  hasPendingFriendRequest(user: User): boolean {
+    return this.friendRequests.some(request =>
+      request.senderId === user.userId && request.receiverId === this.user.userId
+    );
   }
 
   // Redirigir al perfil de otro usuario
   navigateToProfile(userId: number) {
-    console.log("Navegando al perfil del usuario:", userId);
     this.router.navigate(['/friend-profile'], {
       queryParams: {
         id: userId
       },
     });
+  }
 
+  // Redirigir al perfil Admin
+  goToAdminProfile(): void {
+    this.router.navigate(['/admin-profile']);
   }
 
   // Cerrar sesión
@@ -345,6 +429,14 @@ export class MenuComponent implements OnInit, OnDestroy {
         this.authService.logout();
         this.router.navigate(['/login']);
       }
+    });
+  }
+
+  throwError(error: string) {
+    Swal.fire({
+      title: error,
+      icon: "error",
+      confirmButtonText: "Aceptar"
     });
   }
 

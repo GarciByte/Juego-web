@@ -7,7 +7,6 @@ export enum MsgType {
     StartGame = 'StartGame',
     GameInvitation = 'GameInvitation',
     CancelGameInvitation = 'CancelGameInvitation',
-    ErrorGameInvitation = 'ErrorGameInvitation',
     StatsUpdate = 'StatsUpdate',
     GameStart = 'GameStart',
     GameUpdate = 'GameUpdate',

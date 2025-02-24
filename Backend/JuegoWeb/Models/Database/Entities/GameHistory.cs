@@ -15,6 +15,8 @@ public class GameHistory
 
     public int Score { get; set; }
 
+    public int OpponentScore { get; set; }
+
     public string Players { get; set; } = null!;
 
     public string Result { get; set; } = null!;

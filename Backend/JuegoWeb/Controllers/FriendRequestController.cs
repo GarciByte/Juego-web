@@ -74,6 +74,21 @@ public class FriendRequestController : ControllerBase
         }
     }
 
+    // Obtener todas las solicitudes de amistad enviadas por un usuario que no han sido aceptadas
+    [HttpGet("pending-sent")]
+    public async Task<IActionResult> GetPendingSentRequests(int userId)
+    {
+        try
+        {
+            var requests = await _friendRequestService.GetPendingSentRequestsAsync(userId);
+            return Ok(requests);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     // Obtener todos los amigos de un usuario
     [HttpGet("friends")]
     public async Task<IActionResult> GetFriends(int userId)

@@ -47,6 +47,8 @@ public class GameRoomService
         {
             _semaphore.Release();
         }
+
+        Console.WriteLine($"Salas activas: {_activeRooms.Count}.");
     }
 
     // Crear una sala en la que se juega contra un bot

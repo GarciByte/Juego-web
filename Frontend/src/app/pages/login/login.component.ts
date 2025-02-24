@@ -51,7 +51,6 @@ export class LoginComponent implements OnInit {
 
     if (result.success) {
       this.jwt = result.data.accessToken;
-      console.log('Inicio de sesión exitoso', result);
 
       if (this.rememberMe) {
         localStorage.setItem('jwtToken', this.jwt);
@@ -72,22 +71,20 @@ export class LoginComponent implements OnInit {
       if (this.websocketService.isConnectedRxjs()) {
         this.router.navigate(['/menu'])
       } else {
-        Swal.fire({
-          title: "Error en la conexión del WebSocket",
-          icon: "error",
-          confirmButtonText: "Vale"
-        });
+        this.throwError("Se ha producido un error en la conexión con el servidor");
       }
 
     } else {
-      console.error(result.error);
-
-      Swal.fire({
-        title: "Usuario o contraseña incorrectos",
-        icon: "error",
-        confirmButtonText: "Vale"
-      });
+      //console.error(result.error);
+      this.throwError("El nombre de usuario o la contraseña son incorrectos");
     }
   }
 
+  throwError(error: string) {
+    Swal.fire({
+      title: error,
+      icon: "error",
+      confirmButtonText: "Aceptar"
+    });
+  }
 }

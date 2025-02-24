@@ -41,8 +41,7 @@ export class WebsocketService {
   public cancelGameInvitationSubject = new Subject<void>();
 
   // Recibir notificación de error de la invitación
-  private errorGameInvitationSubject = new BehaviorSubject<WebSocketMessage | null>(null);
-  public  errorGameInvitation$ = this.errorGameInvitationSubject.asObservable();
+  public errorGameInvitationSubject = new Subject<void>();
 
   // Recibir notificación de partida empezada
   public gameStartedSubject = new Subject<void>();
@@ -68,7 +67,7 @@ export class WebsocketService {
   }
 
   private onMessageReceived(message: WebSocketMessage) {
-    console.log('Mensaje recibido:', message);
+    //console.log('Mensaje recibido:', message);
 
     // Según el tipo de mensaje
     switch (message.Type) {
@@ -109,16 +108,10 @@ export class WebsocketService {
 
         if (user.userId == message.Content.FromUserId) {
           this.cancelGameInvitationSubject.next();
-          console.log("Se ha rechazado la invitación enviada.");
         } else {
           this.gameInvitationSubject.next(null);
-          console.log("Se ha cancelado y eliminado la invitación.");
+          this.errorGameInvitationSubject.next();
         }
-        break;
-
-      case MsgType.ErrorGameInvitation: // Error en la invitación
-      console.log("ErrorGameInvitation ejecutado en el servicio.");
-        this.errorGameInvitationSubject.next(message);
         break;
 
       case MsgType.GameRoom: // Crear una sala o actualizarla
@@ -147,7 +140,7 @@ export class WebsocketService {
         break;
 
       default:
-        console.warn("Mensaje no reconocido:", message.Type);
+        //console.warn("Mensaje no reconocido:", message.Type);
         break;
     }
   }
@@ -170,21 +163,8 @@ export class WebsocketService {
     this.sendRxjs(message);
   }
 
-  // Notifica al usuario invitado un error en la invitación
-  async errorGameInvitation() {
-    this.errorGameInvitationSubject.next(null);
-
-    Swal.fire({
-      title: "El anfitrión abandonó la sala",
-      icon: "error",
-      confirmButtonText: "Aceptar"
-    });
-  }
-
   // Rechaza una invitación
   async cancelInvitation(invitation: GameInvitation) {
-    console.log("Invitación eliminada.");
-
     this.gameInvitationSubject.next(null);
 
     const cancelInvitation: GameInvitation = {
@@ -245,7 +225,7 @@ export class WebsocketService {
   }
 
   private onError(error: any) {
-    console.error("Error en WebSocket:", error);
+    //console.error("Error en WebSocket:", error);
 
     Swal.fire({
       title: "Se ha perdido la conexión con el servidor",
@@ -257,7 +237,6 @@ export class WebsocketService {
   }
 
   private onDisconnected() {
-    console.log("WebSocket desconectado.");
     this.disconnected.next();
   }
 
@@ -302,7 +281,6 @@ export class WebsocketService {
         });
 
       } else {
-        console.warn("El WebSocket ya está conectado.");
         resolve();
       }
     });
@@ -313,10 +291,14 @@ export class WebsocketService {
 
     if (this.isConnectedRxjs() && this.rxjsSocket) {
       this.rxjsSocket.next(message);
-      console.log("Mensaje enviado:", message);
+      //console.log("Mensaje enviado:", message);
 
     } else {
-      console.error("No hay una conexión activa para enviar el mensaje.");
+      Swal.fire({
+        title: "No se ha podido conectar con el servidor",
+        icon: "error",
+        confirmButtonText: "Aceptar"
+      });
     }
   }
 

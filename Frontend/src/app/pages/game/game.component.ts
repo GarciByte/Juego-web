@@ -95,7 +95,13 @@ export class GameComponent implements OnInit, OnDestroy {
             this.opponent = result.data;
             this.opponent.avatar.url = this.opponent.avatar.url;
           } else {
-            console.error("Error al obtener datos del oponente:", result.error);
+            //console.error("Error al obtener datos del oponente:", result.error);
+
+            Swal.fire({
+              title: "Se ha producido un error al obtener los datos del oponente",
+              icon: "error",
+              confirmButtonText: "Aceptar"
+            });
           }
         }
 
@@ -113,7 +119,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
     // Desconexión del usuario
     this.disconnected$ = this.webSocketService.disconnected.subscribe(() => {
-      console.error("Desconectado del WebSocket");
+      console.warn('Desconectado del Servidor');
     });
 
     // Error del WebSocket
@@ -231,6 +237,22 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
+  exit() {
+    Swal.fire({
+      title: "¿Estás seguro de que quieres abandonar la partida?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí",
+      cancelButtonText: "No"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.leaveGame();
+      } else {
+        Swal.close();
+      }
+    });
+  }
+
   // Regresar al menú
   leaveGame(): void {
     this.showError = false;
@@ -243,6 +265,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
     let htmlContent: string = "";
     htmlContent += "<p>Puntuación: " + history.Score + " puntos</p>";
+    htmlContent += "<p>Puntuación del oponente: " + history.OpponentScore + " puntos</p>";
     htmlContent += "<p>Resultado: " + history.Result + "</p>";
     htmlContent += "<p>Duración: " + history.Duration + "</p>";
 

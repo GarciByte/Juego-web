@@ -16,7 +16,7 @@ public class FriendRequestRepository : Repository<FriendRequest, int>
             .FirstOrDefaultAsync(fr => fr.Id == id);
     }
 
-    // Obtener una solicitud de amistad  por remitente y destinatario
+    // Obtener una solicitud de amistad por remitente y destinatario
     public async Task<FriendRequest> GetByUsersAsync(int senderId, int receiverId)
     {
         return await GetQueryable()
@@ -54,6 +54,16 @@ public class FriendRequestRepository : Repository<FriendRequest, int>
             .Include(fr => fr.Sender)
             .Include(fr => fr.Receiver)
             .Where(fr => fr.ReceiverId == userId && !fr.IsAccepted)
+            .ToListAsync();
+    }
+
+    // Obtener todas las solicitudes de amistad enviadas por un usuario que no han sido aceptadas
+    public async Task<IEnumerable<FriendRequest>> GetPendingSentRequestsForUserAsync(int userId)
+    {
+        return await GetQueryable()
+            .Include(fr => fr.Sender)
+            .Include(fr => fr.Receiver)
+            .Where(fr => fr.SenderId == userId && !fr.IsAccepted)
             .ToListAsync();
     }
 }

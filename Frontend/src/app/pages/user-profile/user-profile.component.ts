@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { WebsocketService } from '../../services/websocket.service';
 import { UserService } from '../../services/user.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-user-profile',
@@ -43,8 +44,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     this.user = this.authService.getUser();
     this.avatarUrl = this.IMG_URL + this.user.avatar.url;
     await this.getHistories(this.user.userId);
-    console.log(this.user);
-    console.log(this.GameHistoriesList);
+    //console.log(this.user);
+    //console.log(this.GameHistoriesList);
   }
 
   async getHistories(userId: number): Promise<void> {
@@ -56,7 +57,13 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       }
 
     } catch (error) {
-      console.error('Error al obtener el historial de partidas:', error);
+      //console.error('Error al obtener el historial de partidas:', error);
+
+      Swal.fire({
+        title: "Se ha producido un error al obtener el historial de partidas",
+        icon: "error",
+        confirmButtonText: "Aceptar"
+      });
     }
   }
 

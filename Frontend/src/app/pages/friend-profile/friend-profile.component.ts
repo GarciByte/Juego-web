@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { UserService } from '../../services/user.service';
 import { WebsocketService } from '../../services/websocket.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-friend-profile',
@@ -49,8 +50,8 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
     const id = parseInt(queryMap.get("id"));
     await this.getUser(id);
     await this.getHistories(this.user.userId);
-    console.log(this.user);
-    console.log(this.GameHistoriesList);
+    //console.log(this.user);
+    //console.log(this.GameHistoriesList);
   }
 
   async getUser(userId: number): Promise<void> {
@@ -63,7 +64,8 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
       }
 
     } catch (error) {
-      console.error('Error al buscar el usuario:', error);
+      //console.error('Error al buscar el usuario:', error);
+      this.throwError("Se ha producido un error al obtener los datos del usuario");
     }
   }
 
@@ -76,7 +78,8 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
       }
 
     } catch (error) {
-      console.error('Error al obtener el historial de partidas:', error);
+      //console.error('Error al obtener el historial de partidas:', error);
+      this.throwError("Se ha producido un error al obtener el historial de partidas");
     }
   }
 
@@ -88,6 +91,14 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
     if (this.routeQueryMap$) {
       this.error$.unsubscribe();
     }
+  }
+
+  throwError(error: string) {
+    Swal.fire({
+      title: error,
+      icon: "error",
+      confirmButtonText: "Aceptar"
+    });
   }
 
 }

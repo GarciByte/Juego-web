@@ -109,6 +109,10 @@
     border-radius: 50%;
 }
 
+.friend-info p {
+    margin: 0;
+}
+
 /* Contenedor de usuarios y solicitudes */
 .users-requests-container {
     flex: 1;
