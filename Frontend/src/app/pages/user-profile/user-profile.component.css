@@ -1,0 +1,24 @@
+.menu-container {
+    max-width: 1200px;
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: #a4c6fa;
+    border-radius: 30px;
+}
+
+/* Barra de navegación */
+.nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    font-size: 22px;
+    gap: 30px;
+}
+
+.nav-container img {
+    height: 75px;
+    width: 75px;
+    border-radius: 50%;
+}

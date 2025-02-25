@@ -1,0 +1,90 @@
+<div class="menu-container">
+
+  <!-- Información del usuario y botones de navegación -->
+  <div class="nav-container">
+    <img [src]="avatarUrl" alt="Avatar del usuario">
+    <p>{{ user.nickname }}</p>
+    <button class="btn-nav" [routerLink]="['/user-profile']">Mi perfil</button>
+    <button *ngIf="user.role === 'Admin'" class="btn-nav" (click)="goToAdminProfile()">Perfil admin</button>
+    <button class="btn-nav" (click)="logout()">Cerrar sesión</button>
+  </div>
+
+  <!-- Iniciar partida -->
+  <button class="btn-play" [routerLink]="['/matchmaking']">🎮 Jugar</button>
+
+  <!-- Estadísticas -->
+  <div class="stats-container">
+    <p>👥 Jugadores en línea: {{ totalPlayers }}</p>
+    <p>🎮 Partidas activas: {{ activeGames }}</p>
+    <p>🕹️ Jugadores en partida: {{ playersInGames }}</p>
+  </div>
+
+  <!-- Lista de amigos y solicitudes de amistad -->
+  <div class="friends-requests-container">
+
+    <!-- Amigos -->
+    <div class="friends-list">
+      <h2>👥 Amigos</h2>
+
+      <!-- Barra de búsqueda de amigos -->
+      <div class="search-bar">
+        <input type="text" [(ngModel)]="searchText" placeholder="Buscar amigo...">
+        <button class="btn-secondary" (click)="filterFriends()">Buscar</button>
+      </div>
+
+      <!-- Tarjeta de cada amigo -->
+      <div *ngFor="let friend of filteredFriends" class="friend-card" (click)="navigateToProfile(friend.userId)">
+        <div class="friend-info">
+          <img [src]="IMG_URL + friend.avatar.url" alt="Avatar del amigo">
+          <p class="nickname">{{ friend.nickname }}</p>
+        </div>
+        <p class="status">
+          <span *ngIf="friend.status === 'Offline'" style="color:red">Desconectado</span>
+          <span *ngIf="friend.status === 'Online'" style="color:green">Conectado</span>
+          <span *ngIf="friend.status === 'Playing'" style="color:blue">Jugando</span>
+        </p>
+        <button class="btn-danger" (click)="deletefriend(friend); $event.stopPropagation()">
+          🗑️ Eliminar
+        </button>
+      </div>
+    </div>
+
+    <!-- Búsqueda de usuarios y solicitudes de amistad -->
+    <div class="users-requests-container">
+
+      <!-- Buscador de usuarios -->
+      <div class="search-users">
+        <h2>🔍 Buscar Usuarios</h2>
+        <div class="search-bar">
+          <input type="text" [(ngModel)]="searchQuery" placeholder="Buscar usuario...">
+          <button class="btn-secondary" (click)="filterUsers()">Buscar</button>
+        </div>
+
+        <!-- Lista de usuarios encontrados -->
+        <ul>
+          <li *ngFor="let user of filteredUsers">
+            <span class="user-nickname">{{ user.nickname }}</span>
+            <button *ngIf="!isFriend(user) && !hasPendingSentFriendRequest(user) && !hasPendingFriendRequest(user)"
+              class="btn-tertiary" (click)="sendFriendRequest(user)">
+              Enviar solicitud
+            </button>
+            <button class="btn-tertiary" (click)="navigateToProfile(user.userId)">Ver perfil</button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Solicitudes de amistad recibidas -->
+      <div class="friend-requests">
+        <h2>📩 Solicitudes de Amistad</h2>
+        <ul>
+          <li *ngFor="let request of friendRequests">
+            <span>{{ request.senderNickname }}</span>
+            <button class="btn-primary" (click)="acceptFriendRequest(request)">Aceptar</button>
+            <button class="btn-danger" (click)="rejectFriendRequest(request)">Rechazar</button>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,86 @@
+<div class="matchmaking-background">
+    <div class="matchmaking-container">
+        <h2>Emparejamiento</h2>
+
+        <!-- Información de los jugadores -->
+        <div class="players-info">
+
+            <!-- Información del Anfitrión -->
+            <div class="player host-player">
+                <h3>
+                    <span *ngIf="isHost; else hostInfo">Anfitrión (Tú)</span>
+                    <ng-template #hostInfo>Anfitrión</ng-template>
+                </h3>
+                <img [src]="isHost ? user.avatar.url : hostPlayer.avatar.url" alt="Avatar Anfitrión">
+                <p>{{ isHost ? user.nickname : hostPlayer.nickname }}</p>
+            </div>
+
+            <!-- Información del Invitado -->
+            <div class="player guest-player">
+                <h3>Invitado</h3>
+                <ng-container *ngIf="guestPlayer; else waitingGuest">
+                    <img [src]="guestPlayer.avatar.url" alt="Avatar Invitado">
+                    <p>{{ guestPlayer.nickname }}</p>
+                </ng-container>
+                <ng-template #waitingGuest>
+                    <div *ngIf="gameRoom?.RoomType === 'Bot'; else defaultWaiting">
+                        <p>Bot</p>
+                    </div>
+                    <ng-template #defaultWaiting>
+                        <p>Esperando a que se una un jugador...</p>
+                    </ng-template>
+                </ng-template>
+            </div>
+        </div>
+
+        <!-- Opciones del anfitrión si no accedió por invitación -->
+        <div *ngIf="isHost && !invitationReceived" class="options-container">
+
+            <!-- Botón para iniciar la partida -->
+            <div *ngIf="canStartGame; else matchmakingOptions">
+                <button class="btn primary-btn" (click)="startGame()">Iniciar Partida</button>
+            </div>
+
+            <!-- Si aún no se cumple la condición para iniciar partida -->
+            <ng-template #matchmakingOptions>
+                <div *ngIf="!isSearching" class="actions">
+                    <button class="btn" (click)="playAgainstBot()" [disabled]="isSearching">Jugar contra un bot</button>
+                    <button class="btn" (click)="playRandom()" [disabled]="isSearching">Jugar contra un oponente
+                        aleatorio</button>
+                </div>
+
+                <!-- Si se está buscando un oponente aleatorio -->
+                <div *ngIf="isSearching" class="searching">
+                    <p>Buscando oponente...</p>
+                    <button class="btn danger-btn" (click)="cancelRandomSearch()">Cancelar</button>
+                </div>
+
+                <!-- Selección de amigo e invitación -->
+                <div *ngIf="!isSearching" class="friend-container">
+                    <div class="friend-select">
+                        <label for="friendSelect">Invitar un amigo:</label>
+                        <select id="friendSelect" [(ngModel)]="selectedFriendId">
+                            <option *ngFor="let friend of friends" [value]="friend.userId"
+                                [disabled]="friend.status !== 'Online'">
+                                {{ friend.nickname }}
+                            </option>
+                        </select>
+                    </div>
+                    <button class="btn" (click)="inviteFriend()">Invitar</button>
+                </div>
+
+            </ng-template>
+        </div>
+
+        <!-- Opciones para el Invitado -->
+        <div *ngIf="!isHost || invitationReceived" class="guest-wait">
+            <p>Esperando a que el anfitrión inicie la partida...</p>
+        </div>
+
+        <!-- Botón para volver al menú -->
+        <div class="back-button">
+            <button class="btn back-btn" (click)="leaveMatchmaking()">Volver al Menú</button>
+        </div>
+
+    </div>
+</div>

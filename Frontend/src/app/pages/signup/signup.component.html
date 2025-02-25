@@ -1,0 +1,69 @@
+<div class="signup-container">
+  <div class="signup-card">
+    <form [formGroup]="myForm" (ngSubmit)="submit()">
+
+      <p class="title">Registro</p>
+
+      <!-- Campo de Imagen -->
+      <div class="file-upload-container">
+        <label for="file-upload" class="file-upload-label">Elige un avatar</label>
+        <span class="file-upload-name">{{ fileName }}</span>
+        <input id="file-upload" class="file-upload-input" type="file" accept="image/png, image/jpeg, image/jpg"
+          (change)="onFileSelected($event)" />
+      </div>
+
+      <!-- Campo de Apodo -->
+      <div class="form-group">
+        <input class="form-control" placeholder="Nickname" type="text" formControlName="nickname" />
+      </div>
+      <div class="error">
+        <div *ngIf="myForm.get('nickname')?.invalid && myForm.get('nickname')?.touched">
+          <div *ngIf="myForm.get('nickname')?.hasError('required')">Nickname es obligatorio.</div>
+          <div *ngIf="myForm.get('nickname')?.hasError('pattern')">No se permite el carácter &#64;.</div>
+        </div>
+      </div>
+
+      <!-- Campo de Correo electrónico -->
+      <div class="form-group">
+        <input class="form-control" placeholder="Correo electrónico" type="email" formControlName="email" />
+      </div>
+      <div class="error">
+        <div *ngIf="myForm.get('email')?.invalid && myForm.get('email')?.touched">
+          <div *ngIf="myForm.get('email')?.hasError('required')">Correo electrónico es obligatorio.</div>
+          <div *ngIf="myForm.get('email')?.hasError('email')">Debe ser un correo electrónico válido.</div>
+        </div>
+      </div>
+
+      <!-- Campo de Contraseña -->
+      <div class="form-group">
+        <input class="form-control" placeholder="Contraseña" type="password" formControlName="password" />
+      </div>
+      <div class="error">
+        <div *ngIf="myForm.get('password')?.invalid && myForm.get('password')?.touched">
+          <div *ngIf="myForm.get('password')?.hasError('required')">La contraseña es obligatoria.</div>
+          <div *ngIf="myForm.get('password')?.hasError('minlength')">La contraseña debe tener mínimo 6 caracteres.</div>
+        </div>
+      </div>
+
+      <!-- Campo de Repetir contraseña -->
+      <div class="form-group">
+        <input class="form-control" placeholder="Repetir contraseña" type="password"
+          formControlName="confirmPassword" />
+      </div>
+      <div class="error">
+        <div *ngIf="myForm.get('confirmPassword')?.invalid && myForm.get('confirmPassword')?.touched">
+          <div *ngIf="myForm.get('confirmPassword')?.hasError('mismatch')">Las contraseñas deben coincidir.</div>
+        </div>
+      </div>
+
+      <!-- Botón de enviar -->
+      <div>
+        <button type="submit" class="signup-button" [disabled]="myForm.invalid">Enviar</button>
+      </div>
+
+      <!-- Enlace al login -->
+      <p class="login-link">¿Ya tienes cuenta? <a [routerLink]="['/login']">Inicia sesión</a></p>
+
+    </form>
+  </div>
+</div>

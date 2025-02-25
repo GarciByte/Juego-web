@@ -1,0 +1,36 @@
+<div class="login-container">
+  <div class="login-card">
+    <form (ngSubmit)="submit()">
+
+      <p class="title">Iniciar sesión</p>
+
+      <!-- Campo de Apodo o Correo electrónico -->
+      <div class="form-group">
+        <input id="email-nickname" type="text" [(ngModel)]="email" name="email-nickname"
+          placeholder="Apodo o Correo electrónico" class="form-control" required />
+      </div>
+
+      <!-- Campo de contraseña -->
+      <div class="form-group">
+        <input id="password" type="password" [(ngModel)]="password" name="password" placeholder="Contraseña"
+          class="form-control" required />
+      </div>
+
+      <!-- Recordar sesión -->
+      <div class="p-field-checkbox">
+        <p-checkbox [(ngModel)]="rememberMe" [ngModelOptions]="{standalone: true}" inputId="rememberMe"
+          binary="true"></p-checkbox>
+        <label for="rememberMe" class="remember-me-label">Recuérdame</label>
+      </div>
+
+      <!-- Botón de iniciar sesión -->
+      <div>
+        <button type="submit" class="login-button">Iniciar sesión</button>
+      </div>
+
+      <!-- Enlace al registro -->
+      <p class="signup-link">¿No tienes cuenta? <a [routerLink]="['/signup']">Regístrate</a></p>
+
+    </form>
+  </div>
+</div>
