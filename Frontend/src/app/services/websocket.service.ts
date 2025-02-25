@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { environment } from '../../environments/environment.development';
+import { environment } from '../../environments/environment';
 import { MsgType, WebSocketMessage } from '../models/web-socket-message';
 import { User } from '../models/user';
 import { GameRoom } from '../models/game-room';

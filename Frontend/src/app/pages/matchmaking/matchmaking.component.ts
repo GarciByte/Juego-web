@@ -3,7 +3,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { WebsocketService } from '../../services/websocket.service';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';

@@ -3,7 +3,7 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import Swal from 'sweetalert2';
 import { User } from '../../models/user';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { WebsocketService } from '../../services/websocket.service';
 import { Subscription } from 'rxjs';
 import { FriendRequestService } from '../../services/friend-request.service';

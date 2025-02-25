@@ -18,10 +18,14 @@ public class JuegoWebContext : DbContext
 
     public DbSet<GameHistory> GameHistory { get; set; }
 
-    // Crear archivo SQLite
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
+#if DEBUG
         string basedir = AppDomain.CurrentDomain.BaseDirectory;
         optionsBuilder.UseSqlite($"DataSource={basedir}{DATABASE_PATH}");
+#else
+        string connection = "Server=db14512.databaseasp.net; Database=db14512; Uid=db14512; Pwd=c@8D_4Aq2g=W;";
+        optionsBuilder.UseMySql(connection, ServerVersion.AutoDetect(connection));
+#endif
     }
 }

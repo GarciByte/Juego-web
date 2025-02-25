@@ -13,7 +13,7 @@ import { WebSocketMessage, MsgType } from '../../models/web-socket-message';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MemoryGameMove } from '../../models/memory-game-move';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-game',

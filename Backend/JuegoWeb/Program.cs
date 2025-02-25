@@ -103,21 +103,15 @@ namespace JuegoWeb
 
             var app = builder.Build();
 
+            app.UseSwagger();
+            app.UseSwaggerUI();
+            app.UseCors("AllowAllOrigins");
+
             // Middleware que convierte CONNECT a GET
             app.UseMiddleware<WebSocketGetMiddleware>();
 
             // Middleware que agrega el JWT al encabezado de autorización
             app.UseMiddleware<WebSocketTokenMiddleware>();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-
-                // Permite CORS
-                app.UseCors("AllowAllOrigins");
-            }
 
             // wwwroot
             app.UseStaticFiles(new StaticFileOptions

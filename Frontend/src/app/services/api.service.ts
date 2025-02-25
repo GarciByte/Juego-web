@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams, HttpResponse, HttpErrorResponse, HttpHeaders } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable, lastValueFrom } from "rxjs";
-import { environment } from "../../environments/environment.development";
+import { environment } from "../../environments/environment";
 import { Result } from "../models/result";
 
 
