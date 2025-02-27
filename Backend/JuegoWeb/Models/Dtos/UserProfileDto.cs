@@ -14,6 +14,8 @@ public class UserProfileDto
 
     public string Role { get; set; } = null!;
 
+    public bool IsBanned { get; set; }
+
     public string Password { get; set; } = null!;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]

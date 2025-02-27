@@ -85,15 +85,5 @@ export class AuthService {
     const user = localStorage.getItem(this.USER_KEY) || sessionStorage.getItem(this.USER_KEY);
     return user ? JSON.parse(user) : null;
   }
-
-  // Comprueba si es admin
-  isAdmin(): boolean {
-    const user = this.getUser();
-    if (user.role == "Admin") {
-      return true
-    } else {
-      return false
-    }
-  }
-
+  
 }

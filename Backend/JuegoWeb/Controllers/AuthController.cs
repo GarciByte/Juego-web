@@ -42,6 +42,13 @@ public class AuthController : ControllerBase
                 return Unauthorized("Datos de inicio de sesión incorrectos.");
             }
 
+            // Prohibición del usuario
+            if (user.IsBanned)
+            {
+                Console.WriteLine($"El usuario {user.Nickname} está baneado.");
+                return StatusCode(StatusCodes.Status403Forbidden, $"El usuario {user.Nickname} está baneado.");
+            }
+
             // Se crea el token JWT
             var tokenDescriptor = new SecurityTokenDescriptor
             {

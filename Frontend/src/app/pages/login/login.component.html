@@ -17,9 +17,8 @@
       </div>
 
       <!-- Recordar sesión -->
-      <div class="p-field-checkbox">
-        <p-checkbox [(ngModel)]="rememberMe" [ngModelOptions]="{standalone: true}" inputId="rememberMe"
-          binary="true"></p-checkbox>
+      <div class="checkbox-group">
+        <input type="checkbox" id="rememberMe" name="rememberMe" [(ngModel)]="rememberMe" [ngModelOptions]="{standalone: true}">
         <label for="rememberMe" class="remember-me-label">Recuérdame</label>
       </div>
 

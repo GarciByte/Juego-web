@@ -21,6 +21,8 @@ public class UserDto
 
     public string Role { get; set; } = null!;
 
+    public bool IsBanned { get; set; }
+
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public UserStatus Status { get; set; }
 }

@@ -18,7 +18,8 @@ public enum MsgType
     GameOver,               // Finalizar partida
     Chat,                   // Mensaje del chat
     RematchRequest,         // Solicitud de revancha
-    CancelRematchRequest    // Cancelar revancha
+    CancelRematchRequest,   // Cancelar revancha
+    UserBanned              // Usuario baneado
 }
 
 public class WebSocketMessage

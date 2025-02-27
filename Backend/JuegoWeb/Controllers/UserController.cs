@@ -59,45 +59,43 @@ namespace JuegoWeb.Controllers
             return Ok(users);
         }
 
+        // Modificar datos de un usuario
         [Authorize]
         [HttpPut("modifyUser")]
-        public async Task<IActionResult> ModifyUser([FromBody] UserProfileDto userDto)
+        public async Task<IActionResult> ModifyUser([FromForm] ModifyUserDto modifyUserDto)
         {
-
-            // Obtener datos del usuario para modificarse a si mismo
+            // Obtener datos del usuario
             UserProfileDto userData = await ReadToken();
-
             if (userData == null)
             {
-                Console.WriteLine("Token inválido o usuario no encontrado.");
-                return BadRequest("El usuario es null");
+                return BadRequest("El usuario no fue encontrado.");
             }
 
-            Console.WriteLine($"Usuario autenticado: ID = {userData.UserId}, Email = {userData.Email}");
-            userDto.UserId = userData.UserId;
+            Console.WriteLine($"Usuario autenticado: ID = {userData.UserId}, Nickname = {userData.Nickname}, Email = {userData.Email}");
+            modifyUserDto.UserId = userData.UserId;
+
             try
             {
-                await _userService.ModifyUserAsync(userDto);
+                await _userService.ModifyUserAsync(modifyUserDto);
                 return Ok("Usuario actualizado correctamente.");
             }
-            catch (InvalidOperationException)
+
+            catch (InvalidOperationException ex)
             {
-                return BadRequest("No pudo modificarse el usuario.");
+                return BadRequest("No pudo modificarse el usuario: " + ex.Message);
             }
         }
 
-        // Solo pueden usar este método los usuarios cuyo rol sea admin
+        // Modificar rol del usuario
         [Authorize(Roles = "Admin")]
         [HttpPut("modifyUserRole")]
         public async Task<IActionResult> ModifyUserRole(ModifyRoleRequest request)
         {
-
             // Obtener datos del usuario
             UserDto userData = await _userService.GetUserByIdAsync(request.UserId);
-
             if (userData == null)
             {
-                return BadRequest("El usuario es null");
+                return BadRequest("El usuario no fue encontrado.");
             }
 
             try
@@ -109,7 +107,7 @@ namespace JuegoWeb.Controllers
                 }
                 else
                 {
-                    return BadRequest("El nuevo rol debe ser User o Admin");
+                    return BadRequest("El nuevo rol debe ser User o Admin.");
                 }
 
             }
@@ -119,26 +117,47 @@ namespace JuegoWeb.Controllers
             }
         }
 
+        // Modificar prohibición de un usuario
+        [Authorize(Roles = "Admin")]
+        [HttpPut("modifyUserBan")]
+        public async Task<IActionResult> ModifyUserBan(ModifyBanRequest request)
+        {
+            // Obtener datos del usuario
+            UserDto userData = await _userService.GetUserByIdAsync(request.UserId);
+            if (userData == null)
+            {
+                return BadRequest("El usuario no fue encontrado.");
+            }
+
+            try
+            {
+                await _userService.ModifyUserBanAsync(request.UserId, request.IsBanned);
+                return Ok("Prohibición del usuario actualizado correctamente.");
+            }
+            catch (InvalidOperationException)
+            {
+                return BadRequest("No pudo modificarse la prohibición del usuario.");
+            }
+        }
+
+        // Modificar contraseña del usuario
         [Authorize]
         [HttpPut("modifyPassword")]
         public async Task<IActionResult> ModifyPassword([FromBody] NewPasswordDto newPasswordRequest)
         {
-
             if (newPasswordRequest == null)
             {
                 return BadRequest("La nueva contraseña es nula.");
             }
 
-            // Obtener datos del usuario para modificarse a si mismo
+            // Obtener datos del usuario
             UserProfileDto userData = await ReadToken();
-
             if (userData == null)
             {
-                Console.WriteLine("Token inválido o usuario no encontrado.");
-                return BadRequest("El usuario es null");
+                return BadRequest("El usuario no fue encontrado.");
             }
 
-            Console.WriteLine($"Usuario autenticado: ID = {userData.UserId}, Email = {userData.Email}");
+            Console.WriteLine($"Usuario autenticado: ID = {userData.UserId}, Nickname = {userData.Nickname}, Email = {userData.Email}");
 
             try
             {
@@ -150,24 +169,6 @@ namespace JuegoWeb.Controllers
                 return BadRequest("No pudo modificarse la contraseña.");
             }
         }
-
-        /*
-        // Elimina un usuario
-        [Authorize(Roles = "Admin")]
-        [HttpDelete("deleteUser/{userId}")]
-        public async Task<IActionResult> DeleteUser(int userId)
-        {
-            try
-            {
-                //await _userService.DeleteUserAsync(userId);
-
-                return Ok("Usuario eliminado correctamente.");
-            }
-            catch (InvalidOperationException)
-            {
-                return BadRequest("No pudo eliminarse el usuario");
-            }
-        }*/
 
         // Método para quitar tildes y convertir a minúsculas
         private static string Normalize(string input)

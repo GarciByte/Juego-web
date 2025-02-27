@@ -33,6 +33,7 @@ public class Seeder
         var image8 = new Image { Name = "imagen8" + "_default", Path = "avatars/avatar.png" };
         var image9 = new Image { Name = "imagen9" + "_default", Path = "avatars/avatar.png" };
         var image10 = new Image { Name = "imagen10" + "_default", Path = "avatars/avatar.png" };
+        var image11 = new Image { Name = "imagen11" + "_default", Path = "avatars/avatar.png" };
 
         await _context.Images.AddRangeAsync(
             image1, 
@@ -44,7 +45,8 @@ public class Seeder
             image7, 
             image8, 
             image9,
-            image10
+            image10,
+            image11
             );
 
         await _context.SaveChangesAsync();
@@ -56,6 +58,7 @@ public class Seeder
             Email = "david@gmail.com",
             Password = PasswordHelper.Hash("123456"),
             Role = "Admin",
+            IsBanned = false,
             AvatarId = image1.Id
         },
         new User {
@@ -63,6 +66,7 @@ public class Seeder
             Email = "usuario@gmail.com",
             Password = PasswordHelper.Hash("123456"),
             Role = "User",
+            IsBanned = false,
             AvatarId = image2.Id
         },
         new User {
@@ -70,6 +74,7 @@ public class Seeder
             Email = "samuel@gmail.com",
             Password = PasswordHelper.Hash("123456"),
             Role = "User",
+            IsBanned = false,
             AvatarId = image3.Id
         },
         new User {
@@ -77,49 +82,64 @@ public class Seeder
             Email = "manolo@gmail.com",
             Password = PasswordHelper.Hash("123456"),
             Role = "User",
+            IsBanned = false,
             AvatarId = image4.Id
+        },
+        new User {
+            Nickname = "Pedro",
+            Email = "pedro@gmail.com",
+            Password = PasswordHelper.Hash("123456"),
+            Role = "User",
+            IsBanned = false,
+            AvatarId = image5.Id
         },
         new User {
             Nickname = "Daniel",
             Email = "daniel@gmail.com",
             Password = PasswordHelper.Hash("123456"),
             Role = "User",
-            AvatarId = image5.Id
+            IsBanned = false,
+            AvatarId = image6.Id
         },
         new User {
             Nickname = "Alicia",
             Email = "alicia@gmail.com",
             Password = PasswordHelper.Hash("123456"),
             Role = "User",
-            AvatarId = image6.Id
+            IsBanned = false,
+            AvatarId = image7.Id
         },
         new User {
             Nickname = "Antonia",
             Email = "antonia@gmail.com",
             Password = PasswordHelper.Hash("123456"),
             Role = "User",
-            AvatarId = image7.Id
+            IsBanned = false,
+            AvatarId = image8.Id
         },
         new User {
             Nickname = "Juan",
             Email = "juan@gmail.com",
             Password = PasswordHelper.Hash("123456"),
             Role = "User",
-            AvatarId = image8.Id
+            IsBanned = false,
+            AvatarId = image9.Id
         },
         new User {
             Nickname = "Roberto",
             Email = "roberto@gmail.com",
             Password = PasswordHelper.Hash("123456"),
             Role = "User",
-            AvatarId = image9.Id
+            IsBanned = false,
+            AvatarId = image10.Id
         },
         new User {
             Nickname = "Eva",
             Email = "eva@gmail.com",
             Password = PasswordHelper.Hash("123456"),
             Role = "User",
-            AvatarId = image10.Id
+            IsBanned = false,
+            AvatarId = image11.Id
         },
     ];
 
@@ -132,6 +152,7 @@ public class Seeder
         var samuel = await _context.User.FirstOrDefaultAsync(u => u.Nickname == "Samuel");
         var manolo = await _context.User.FirstOrDefaultAsync(u => u.Nickname == "Manolo");
         var daniel = await _context.User.FirstOrDefaultAsync(u => u.Nickname == "Daniel");
+        var pedro = await _context.User.FirstOrDefaultAsync(u => u.Nickname == "Pedro");
 
         // Crear la relación de amistad con David
 
@@ -171,6 +192,18 @@ public class Seeder
             FriendId = david.Id
         };
 
+        var userFriendDavid_Pedro = new UserFriend // Pedro
+        {
+            UserId = david.Id,
+            FriendId = pedro.Id
+        };
+
+        var userFriendPedro = new UserFriend
+        {
+            UserId = pedro.Id,
+            FriendId = david.Id
+        };
+
         var userFriendDavid_Daniel = new UserFriend // Daniel
         {
             UserId = david.Id,
@@ -190,6 +223,8 @@ public class Seeder
             userFriendSamuel,
             userFriendDavid_Manolo,
             userFriendManolo,
+            userFriendDavid_Pedro,
+            userFriendPedro,
             userFriendDavid_Daniel,
             userFriendDaniel
             );
@@ -219,6 +254,13 @@ public class Seeder
         var friendRequest_4 = new FriendRequest
         {
             SenderId = david.Id,
+            ReceiverId = pedro.Id,
+            IsAccepted = true
+        };
+
+        var friendRequest_5 = new FriendRequest
+        {
+            SenderId = david.Id,
             ReceiverId = daniel.Id,
             IsAccepted = true
         };
@@ -227,7 +269,8 @@ public class Seeder
             friendRequest_1, 
             friendRequest_2, 
             friendRequest_3, 
-            friendRequest_4
+            friendRequest_4,
+            friendRequest_5
             );
 
         // Crear historial de partidas
@@ -238,7 +281,7 @@ public class Seeder
                 GameName = "Juego de Memoria",
                 Score = 8,
                 OpponentScore = 0,
-                Players = $"{david.Id}, {usuario.Id}",
+                Players = $"{david.Nickname}, {usuario.Nickname}",
                 Result = "Ganador",
                 Duration = TimeSpan.FromMinutes(15),
                 UserId = david.Id
@@ -248,9 +291,59 @@ public class Seeder
                 GameName = "Juego de Memoria",
                 Score = 2,
                 OpponentScore = 6,
-                Players = $"{david.Id}, {samuel.Id}",
+                Players = $"{david.Nickname}, {samuel.Nickname}",
                 Result = "Perdedor",
                 Duration = TimeSpan.FromMinutes(25),
+                UserId = david.Id
+            },
+            new GameHistory
+            {
+                GameName = "Juego de Memoria",
+                Score = 5,
+                OpponentScore = 3,
+                Players = $"{david.Nickname}, {manolo.Nickname}",
+                Result = "Ganador",
+                Duration = TimeSpan.FromMinutes(2),
+                UserId = david.Id
+            },
+            new GameHistory
+            {
+                GameName = "Juego de Memoria",
+                Score = 1,
+                OpponentScore = 7,
+                Players = $"{david.Nickname}, {daniel.Nickname}",
+                Result = "Perdedor",
+                Duration = TimeSpan.FromMinutes(3),
+                UserId = david.Id
+            },
+            new GameHistory
+            {
+                GameName = "Juego de Memoria",
+                Score = 2,
+                OpponentScore = 6,
+                Players = $"{david.Nickname}, {pedro.Nickname}",
+                Result = "Perdedor",
+                Duration = TimeSpan.FromMinutes(5),
+                UserId = david.Id
+            },
+            new GameHistory
+            {
+                GameName = "Juego de Memoria",
+                Score = 7,
+                OpponentScore = 1,
+                Players = $"{david.Nickname}, {usuario.Nickname}",
+                Result = "Ganador",
+                Duration = TimeSpan.FromMinutes(7),
+                UserId = david.Id
+            },
+            new GameHistory
+            {
+                GameName = "Juego de Memoria",
+                Score = 5,
+                OpponentScore = 3,
+                Players = $"{david.Nickname}, {samuel.Nickname}",
+                Result = "Ganador",
+                Duration = TimeSpan.FromMinutes(4),
                 UserId = david.Id
             }
         };

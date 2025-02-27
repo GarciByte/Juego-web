@@ -40,10 +40,17 @@
   box-shadow: 0 0 3px rgba(0, 123, 255, 0.5);
 }
 
+.checkbox-group input[type="checkbox"] {
+  cursor: pointer;
+  transform: scale(1.4);
+  margin: 0px;
+}
+
 .remember-me-label {
-  font-size: 15px;
+  font-size: 16px;
   margin-left: 10px;
   cursor: pointer;
+  color: rgb(0, 0, 0)
 }
 
 .login-button {
