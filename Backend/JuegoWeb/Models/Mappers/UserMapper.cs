@@ -1,5 +1,6 @@
 ﻿using JuegoWeb.Models.Database.Entities;
 using JuegoWeb.Models.Dtos;
+using System.Runtime.CompilerServices;
 
 namespace JuegoWeb.Models.Mappers;
 
@@ -21,6 +22,7 @@ public class UserMapper
             Email = user.Email,
             Avatar = user.Avatar != null ? _imageMapper.ToDto(user.Avatar, request) : null,
             Role = user.Role,
+            IsBanned = user.IsBanned,
             Status = UserStatus.Offline,
         };
     }
@@ -34,6 +36,7 @@ public class UserMapper
             Email = user.Email,
             Avatar = user.Avatar != null ? _imageMapper.ToDto(user.Avatar, request) : null,
             Role = user.Role,
+            IsBanned = user.IsBanned,
             Password = user.Password,
             Status = UserStatus.Offline,
         };

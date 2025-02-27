@@ -2,5 +2,5 @@
 
 public class NewPasswordDto
 {
-public string newPassword { get; set; }
+    public string newPassword { get; set; }
 }

@@ -1,7 +1,6 @@
 ﻿using JuegoWeb.MemoryGame;
 using JuegoWeb.Models.Dtos;
 using JuegoWeb.Services;
-using Microsoft.EntityFrameworkCore.Metadata;
 using System.Net.WebSockets;
 using System.Text.Json;
 
@@ -339,6 +338,11 @@ public class WebSocketNetwork : IWebSocketMessageSender
                     await RequestRematchAsync(handler, message);
                     break;
 
+                // Usuario baneado
+                case MsgType.UserBanned:
+                    await HandleUserBanAsync(message);
+                    break;
+
                 default:
                     Console.WriteLine($"Mensaje no manejado: {message.Type}");
                     break;
@@ -347,6 +351,28 @@ public class WebSocketNetwork : IWebSocketMessageSender
         catch (Exception ex)
         {
             Console.WriteLine($"Error procesando mensaje: {ex.Message}");
+        }
+    }
+
+    // Notificar la prohibición de un usuario
+    private async Task HandleUserBanAsync(WebSocketMessage message)
+    {
+        try
+        {
+            string jsonContent = message.Content.ToString();
+            int userId = JsonSerializer.Deserialize<int>(jsonContent);
+            Console.WriteLine($"Se ha baneado al usuaio con ID: {userId}");
+
+            await SendToUserAsync(userId, new WebSocketMessage
+            {
+                Type = MsgType.UserBanned,
+                Id = userId,
+                Content = "UserBanned"
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al deserializar userId: {ex.Message}");
         }
     }
 
@@ -656,7 +682,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
                     if (roomUpdated != null)
                     {
                         await GameRoomUpdateAsync(roomUpdated);
-                    }    
+                    }
 
                     // Notificar el nuevo estado del usuario
                     handler.User.Status = UserStatus.Online;

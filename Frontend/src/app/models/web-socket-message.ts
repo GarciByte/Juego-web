@@ -13,7 +13,8 @@ export enum MsgType {
     GameOver = 'GameOver',
     Chat = 'Chat',
     RematchRequest = 'RematchRequest',
-    CancelRematchRequest = 'CancelRematchRequest'
+    CancelRematchRequest = 'CancelRematchRequest',
+    UserBanned = 'UserBanned'
 }
 
 export interface WebSocketMessage {

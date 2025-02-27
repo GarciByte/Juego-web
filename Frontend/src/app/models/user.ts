@@ -12,5 +12,6 @@ export interface User {
     email: string,
     avatar: Image,
     role: string,
+    isBanned: boolean,
     status: UserStatus;
 }

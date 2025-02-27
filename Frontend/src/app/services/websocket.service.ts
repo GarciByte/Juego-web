@@ -58,7 +58,7 @@ export class WebsocketService {
   // Recibir notificación de solicitud de amistad
   public friendRequestSubject = new Subject<void>();
 
-  // Recibir notificación de de la lista de amigos
+  // Recibir notificación de la lista de amigos
   public friendsSubject = new Subject<void>();
 
 
@@ -130,6 +130,10 @@ export class WebsocketService {
         this.friendRequestSubject.next();
         break;
 
+      case MsgType.UserBanned: // Prohibición de un usuario
+        this.handleUserBan();
+        break;
+
       // Mensajes redirigidos al servicio del juego
       case MsgType.GameStart:
       case MsgType.GameUpdate:
@@ -143,6 +147,17 @@ export class WebsocketService {
         //console.warn("Mensaje no reconocido:", message.Type);
         break;
     }
+  }
+
+  // Prohibición de un usuario
+  handleUserBan(): void {
+    Swal.fire({
+      title: "Tu cuenta ha sido suspendida",
+      icon: "error",
+      confirmButtonText: "Aceptar",
+    });
+
+    this.error.next();
   }
 
   // Acepta una invitación

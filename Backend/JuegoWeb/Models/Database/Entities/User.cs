@@ -20,6 +20,8 @@ public class User
 
     public string Role { get; set; } = null!;
 
+    public bool IsBanned { get; set; }
+
     [ForeignKey("AvatarId")]
     public virtual Image Avatar { get; set; }
 

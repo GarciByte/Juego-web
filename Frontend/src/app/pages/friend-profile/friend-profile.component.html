@@ -1,6 +1,75 @@
-<div class="nav-container">
-    <img [src]="avatarUrl" alt="Avatar del usuario">
-    <p>{{ user.nickname }}</p>
+<div class="user-profile-container">
+
+  <div class="user-header">
+
+    <!-- Información del usuario -->
+    <div class="user-info">
+      <img [src]="avatarUrl" alt="Avatar del usuario" class="avatar">
+      <div class="user-details">
+        <h2>{{ user?.nickname }}</h2>
+        <p>{{ user?.email }}</p>
+      </div>
+    </div>
+
+    <!-- Botón para añadir/eliminar amigo -->
+    <button *ngIf="showFriendButton()" [ngClass]="{'btn-delete': isFriend(), 'btn-send-request': !isFriend()}"
+      (click)="onFriendButtonClick()"> {{ getFriendButtonLabel() }}
+    </button>
+
+    <!-- Botón de volver -->
+    <button [routerLink]="['/menu']">Volver al Menú</button>
   </div>
 
-<button [routerLink]="['/menu']">Volver</button>
+  <!-- Historial de Partidas -->
+  <div class="history-section">
+
+    <div class="history-header">
+      <h3>Historial de Partidas</h3>
+
+      <div class="pagination-controls">
+        <label for="pageSize">Mostrar</label>
+        <select id="pageSize" (change)="onPageSizeChange($event)">
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
+        <span>partidas por página</span>
+      </div>
+    </div>
+
+    <!-- Tabla de historial -->
+    <table class="history-table">
+
+      <thead>
+        <tr>
+          <th>Juego</th>
+          <th>Puntuación</th>
+          <th>Jugadores</th>
+          <th>Resultado</th>
+          <th>Tiempo Jugado</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let history of paginatedHistories">
+          <td>{{ history.gameName }}</td>
+          <td>{{ history.score }}</td>
+          <td>{{ history.players }}</td>
+          <td>{{ history.result }}</td>
+          <td>{{ history.duration }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Paginación -->
+    <div class="pagination-nav">
+      <button (click)="goToFirstPage()">Inicio</button>
+      <button (click)="goToPreviousPage()">Anterior</button>
+      <span>Página {{ currentPage }} de {{ totalPages }}</span>
+      <button (click)="goToNextPage()">Siguiente</button>
+      <button (click)="goToLastPage()">Fin</button>
+    </div>
+
+  </div>
+</div>

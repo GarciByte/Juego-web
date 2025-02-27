@@ -75,8 +75,15 @@ export class LoginComponent implements OnInit {
       }
 
     } else {
-      //console.error(result.error);
-      this.throwError("El nombre de usuario o la contraseña son incorrectos");
+
+      // Prohibición del usuario
+      if (result.error === "Forbidden") {
+        this.throwError("Tu cuenta ha sido suspendida");
+
+      } else {
+        //console.error(result.error);
+        this.throwError("El nombre de usuario o la contraseña son incorrectos");
+      }
     }
   }
 

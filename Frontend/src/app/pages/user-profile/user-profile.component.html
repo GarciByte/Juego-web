@@ -1,6 +1,139 @@
-<div class="nav-container">
-    <img [src]="avatarUrl" alt="Avatar del usuario">
-    <p>{{ user.nickname }}</p>
+<div class="user-profile-container">
+
+  <!-- Información del usuario y botón de volver -->
+  <div class="user-header">
+
+    <div class="user-info">
+      <img [src]="avatarUrl" alt="Avatar del usuario" class="avatar">
+      <div class="user-details">
+        <h2>{{ user.nickname }}</h2>
+        <p>{{ user.email }}</p>
+      </div>
+    </div>
+
+    <button [routerLink]="['/menu']">Volver al Menú</button>
   </div>
 
-<button [routerLink]="['/menu']">Volver</button>
+  <!-- Formulario de Modificar Perfil -->
+  <div class="profile-form">
+
+    <h3>Modificar Perfil</h3>
+    <form [formGroup]="userProfileForm" (ngSubmit)="onSubmitProfile()">
+
+      <!-- Apodo y Correo electrónico -->
+      <div class="form-row">
+
+        <div class="form-group">
+          <label for="nickname">Apodo</label>
+          <input id="nickname" type="text" formControlName="nickname">
+        </div>
+
+        <div class="form-group">
+          <label for="email">Correo electrónico</label>
+          <input id="email" type="email" formControlName="email">
+        </div>
+      </div>
+
+      <!-- Avatar -->
+      <div class="file-upload-container">
+
+        <label for="file-upload" class="file-upload-label">Cambiar avatar</label>
+        <span class="file-upload-name">{{ fileName }}</span>
+        <input id="file-upload" class="file-upload-input" type="file" accept="image/png, image/jpeg, image/jpg"
+          (change)="onFileChange($event)" />
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="removeAvatar" formControlName="removeAvatar">
+          <label for="removeAvatar">Borrar avatar</label>
+        </div>
+      </div>
+
+      <!-- Botón Actualizar Perfil-->
+      <div class="center-button">
+        <button type="submit">Actualizar Perfil</button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Formulario de Cambiar Contraseña -->
+  <div class="password-form">
+
+    <h3>Cambiar Contraseña</h3>
+    <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()">
+
+      <!-- Nueva Contraseña y Confirmar Contraseña -->
+      <div class="form-row">
+
+        <div class="form-group">
+          <label for="newPassword">Nueva Contraseña</label>
+          <input id="newPassword" type="password" formControlName="newPassword">
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirmar Contraseña</label>
+          <input id="confirmPassword" type="password" formControlName="confirmPassword">
+        </div>
+      </div>
+
+      <!-- Botón Actualizar Contraseña -->
+      <div class="center-button">
+        <button type="submit">Actualizar Contraseña</button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Historial de Partidas -->
+  <div class="history-section">
+
+    <div class="history-header">
+      <h3>Historial de Partidas</h3>
+
+      <div class="pagination-controls">
+        <label for="pageSize">Mostrar</label>
+        <select id="pageSize" (change)="onPageSizeChange($event)">
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
+        <span>partidas por página</span>
+      </div>
+    </div>
+
+    <!-- Tabla de historial -->
+    <table class="history-table">
+
+      <thead>
+        <tr>
+          <th>Juego</th>
+          <th>Puntuación</th>
+          <th>Jugadores</th>
+          <th>Resultado</th>
+          <th>Tiempo Jugado</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let history of paginatedHistories">
+          <td>{{ history.gameName }}</td>
+          <td>{{ history.score }}</td>
+          <td>{{ history.players }}</td>
+          <td>{{ history.result }}</td>
+          <td>{{ history.duration }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Paginación -->
+    <div class="pagination-nav">
+      <button (click)="goToFirstPage()">Inicio</button>
+      <button (click)="goToPreviousPage()">Anterior</button>
+      <span>Página {{ currentPage }} de {{ totalPages }}</span>
+      <button (click)="goToNextPage()">Siguiente</button>
+      <button (click)="goToLastPage()">Fin</button>
+    </div>
+
+  </div>
+</div>
