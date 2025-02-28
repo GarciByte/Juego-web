@@ -38,7 +38,7 @@ button:hover {
 
 /* Botones de acción */
 .action-button {
-    margin: 0 8px;
+    margin: 8px;
     padding: 8px 12px;
     font-size: 16px;
 }
@@ -106,4 +106,54 @@ button:hover {
     width: 75px;
     height: 75px;
     border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+
+    .admin-profile-container {
+        font-size: 16px;
+        padding: 1rem;
+    }
+
+    .admin-header {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 15px;
+    }
+
+    .admin-header h2 {
+        margin-bottom: 10px;
+    }
+
+    .admin-header button {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .users-section {
+        padding: 15px 20px;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .user-table th,
+    .user-table td {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    .avatar {
+        width: 50px;
+        height: 50px;
+    }
+
+    .action-button {
+        margin: 4px;
+        padding: 6px 8px;
+        font-size: 14px;
+        white-space: nowrap;
+    }
 }

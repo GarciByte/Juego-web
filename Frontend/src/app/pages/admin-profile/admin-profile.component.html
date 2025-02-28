@@ -14,42 +14,44 @@
         </div>
 
         <!-- Tabla de usuarios -->
-        <table class="user-table">
-            <thead>
-                <tr>
-                    <th>Avatar</th>
-                    <th>Apodo</th>
-                    <th>Correo electrónico</th>
-                    <th>Rol</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let user of allUsers">
-                    <td>
-                        <img [src]="user.avatar.url" alt="Avatar del usuario" class="avatar">
-                    </td>
-                    <td>{{ user.nickname }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.role }}</td>
-                    <td>
+        <div class="table-container">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>Avatar</th>
+                        <th>Apodo</th>
+                        <th>Correo electrónico</th>
+                        <th>Rol</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let user of allUsers">
+                        <td>
+                            <img [src]="user.avatar.url" alt="Avatar del usuario" class="avatar">
+                        </td>
+                        <td>{{ user.nickname }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.role }}</td>
+                        <td>
 
-                        <!-- Botón para cambiar rol -->
-                        <button class="action-button role-button" (click)="modifyUserRole(user)"
-                            [disabled]="user.userId === this.user.userId">
-                            Cambiar Rol
-                        </button>
-                        
-                        <!-- Botón para prohibir o quitar prohibición -->
-                        <button class="action-button ban-button" (click)="modifyUserBan(user)"
-                            [disabled]="user.userId === this.user.userId">
-                            {{ user.isBanned ? 'Quitar Prohibición' : 'Prohibir Acceso' }}
-                        </button>
+                            <!-- Botón para cambiar rol -->
+                            <button class="action-button role-button" (click)="modifyUserRole(user)"
+                                [disabled]="user.userId === this.user.userId">
+                                Cambiar Rol
+                            </button>
 
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                            <!-- Botón para prohibir o quitar prohibición -->
+                            <button class="action-button ban-button" (click)="modifyUserBan(user)"
+                                [disabled]="user.userId === this.user.userId">
+                                {{ user.isBanned ? 'Quitar Prohibición' : 'Prohibir Acceso' }}
+                            </button>
+
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
     </div>
 </div>
