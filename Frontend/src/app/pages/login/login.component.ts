@@ -77,7 +77,7 @@ export class LoginComponent implements OnInit {
     } else {
 
       // Prohibición del usuario
-      if (result.error === "Forbidden") {
+      if (result.statusCode === 403) {
         this.throwError("Tu cuenta ha sido suspendida");
 
       } else {

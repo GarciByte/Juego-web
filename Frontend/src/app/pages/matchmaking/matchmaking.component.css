@@ -1,4 +1,3 @@
-/* Contenedor principal */
 .matchmaking-background {
   display: flex;
   flex-direction: column;
@@ -145,4 +144,57 @@
 .guest-wait p {
   font-size: 1.1em;
   color: #555;
+}
+
+/* Responsivo para pantallas pequeñas */
+@media (max-width: 768px) {
+
+  .matchmaking-container {
+    padding: 20px;
+    font-size: 16px;
+  }
+
+  .players-info {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .player {
+    width: 100%;
+    max-width: 300px;
+    padding: 10px;
+  }
+
+  .player h3 {
+    font-size: 1.1em;
+  }
+
+  .player img {
+    width: 60px;
+    height: 60px;
+    margin: 8px 0;
+  }
+
+  .player p {
+    font-size: 0.9em;
+  }
+
+  .options-container,
+  .actions,
+  .friend-container,
+  .searching,
+  .back-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 8px 14px;
+    font-size: 0.9em;
+    margin: 4px;
+  }
 }
