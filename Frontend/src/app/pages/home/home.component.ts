@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../services/auth.service';
 import { WebsocketService } from '../../services/websocket.service';
 
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -25,4 +26,5 @@ export class HomeComponent implements OnInit {
       this.router.navigate(['/menu']);
     }
   }
+  
 }

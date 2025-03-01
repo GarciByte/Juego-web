@@ -1,9 +1,9 @@
-﻿using System.Net.WebSockets;
-using JuegoWeb.Models.Dtos;
+﻿using JuegoWeb.Models.Dtos;
 using JuegoWeb.Services;
 using JuegoWeb.WebSocketAdvanced;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.WebSockets;
 
 namespace JuegoWeb.Controllers;
 
@@ -33,7 +33,7 @@ public class WebSocketController : ControllerBase
             if (user == null)
             {
                 HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
-                Console.WriteLine("El usuario es null");
+                //Console.WriteLine("El usuario es null");
             }
 
             // Aceptamos la solicitud
@@ -45,7 +45,7 @@ public class WebSocketController : ControllerBase
         // En caso contrario la rechazamos
         else
         {
-            Console.WriteLine("No es una conexión de WebSocket.");
+            //Console.WriteLine("No es una conexión de WebSocket.");
             HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
         }
 
@@ -63,7 +63,7 @@ public class WebSocketController : ControllerBase
         }
         catch (Exception)
         {
-            Console.WriteLine("La ID del usuario es null");
+            //Console.WriteLine("La ID del usuario es null");
             return null;
         }
     }

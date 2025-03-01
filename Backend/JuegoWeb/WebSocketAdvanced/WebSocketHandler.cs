@@ -1,5 +1,4 @@
-﻿using JuegoWeb.Models.Database.Entities;
-using JuegoWeb.Models.Dtos;
+﻿using JuegoWeb.Models.Dtos;
 using JuegoWeb.Services;
 using System.Net.WebSockets;
 using System.Text;
@@ -121,7 +120,7 @@ public class WebSocketHandler : IDisposable
             byte[] bytes = Encoding.UTF8.GetBytes(jsonMessage);
             await _webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
         }
-        else 
+        else
         {
             Console.WriteLine($"No se ha podido enviar a {User.Nickname} el mensaje.");
         }

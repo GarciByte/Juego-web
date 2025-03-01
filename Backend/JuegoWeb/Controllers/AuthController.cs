@@ -45,7 +45,7 @@ public class AuthController : ControllerBase
             // Prohibición del usuario
             if (user.IsBanned)
             {
-                Console.WriteLine($"El usuario {user.Nickname} está baneado.");
+                //Console.WriteLine($"El usuario {user.Nickname} está baneado.");
                 return StatusCode(StatusCodes.Status403Forbidden, $"El usuario {user.Nickname} está baneado.");
             }
 

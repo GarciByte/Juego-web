@@ -85,5 +85,5 @@ export class AuthService {
     const user = localStorage.getItem(this.USER_KEY) || sessionStorage.getItem(this.USER_KEY);
     return user ? JSON.parse(user) : null;
   }
-  
+
 }

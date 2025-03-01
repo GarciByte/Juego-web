@@ -11,6 +11,7 @@ import { GameHistory } from '../../models/game-history';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
+
 @Component({
   selector: 'app-user-profile',
   standalone: true,

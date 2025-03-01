@@ -53,7 +53,6 @@ public class GameHistoryService
     public async Task<List<GameHistoryDto>> GetHistoriesByUserIdAsync(int userId)
     {
         var histories = await _unitOfWork.IGameHistoryRepository.GetHistoriesByUserIdAsync(userId);
-
         return _gameHistoryMapper.HistoriesToDto(histories).ToList();
     }
 }

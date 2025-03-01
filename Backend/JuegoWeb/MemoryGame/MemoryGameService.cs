@@ -131,7 +131,7 @@ public class MemoryGameService
             // Guarda la partida en el diccionario
             _activeGames[game.RoomId] = game;
 
-            Console.WriteLine($"Ha empezado una nueva partida con los usuarios con ID: {game.Players[0].UserId} y {game.Players[1].UserId}.");
+            //Console.WriteLine($"Ha empezado una nueva partida con los usuarios con ID: {game.Players[0].UserId} y {game.Players[1].UserId}.");
 
             // Inicia el temporizador
             _ = RestartTurnTimerAsync(game);
@@ -277,7 +277,6 @@ public class MemoryGameService
         }
     }
 
-
     // Envía la actualización del juego a cada jugador
     private async Task BroadcastGameUpdateAsync(MemoryGame game)
     {
@@ -400,7 +399,7 @@ public class MemoryGameService
     public async Task HandleTurnTimeoutAsync(MemoryGame game)
     {
         int timeoutPlayerId = game.Players[game.CurrentPlayerIndex].UserId;
-        Console.WriteLine($"Al usuario con ID: {timeoutPlayerId} se le ha acabado el tiempo del turno.");
+        //Console.WriteLine($"Al usuario con ID: {timeoutPlayerId} se le ha acabado el tiempo del turno.");
         await EndGameAsync(game, timeoutPlayerId);
     }
 
@@ -418,8 +417,8 @@ public class MemoryGameService
 
         foreach (var history in gameHistoryDtoList)
         {
-            Console.WriteLine($"Punuación del jugador {history.UserId}: {history.Score}.");
-            Console.WriteLine($"Punuación del oponente para {history.UserId}: {history.OpponentScore}.");
+            //Console.WriteLine($"Punuación del jugador {history.UserId}: {history.Score}.");
+            //Console.WriteLine($"Punuación del oponente para {history.UserId}: {history.OpponentScore}.");
             await SendWebSocketMessageAsync(history.UserId, new WebSocketMessage
             {
                 Type = MsgType.GameOver,
@@ -432,7 +431,7 @@ public class MemoryGameService
         }
 
         game.GameFinished = true;
-        Console.WriteLine($"La partida con ID: {game.RoomId} a finalizado.");
+        //Console.WriteLine($"La partida con ID: {game.RoomId} a finalizado.");
     }
 
     // Guarda en la base de datos el historial de la partida para cada jugador
@@ -568,7 +567,7 @@ public class MemoryGameService
         {
             if (!game.GameFinished)
             {
-                Console.WriteLine($"El usuario con ID {userId} ha abandonado la partida.");
+                //Console.WriteLine($"El usuario con ID {userId} ha abandonado la partida.");
                 await EndGameAsync(game, userId);
             }
             else
@@ -580,10 +579,6 @@ public class MemoryGameService
                 }
             }
             _activeGames.TryRemove(game.RoomId, out _);
-        }
-        else
-        {
-            Console.WriteLine("El jugador no estaba en una partida en curso.");
         }
     }
 

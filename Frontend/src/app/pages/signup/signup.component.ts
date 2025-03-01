@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import Swal from 'sweetalert2';
 import { WebsocketService } from '../../services/websocket.service';
 
+
 @Component({
   selector: 'app-signup',
   standalone: true,

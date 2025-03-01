@@ -15,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { MemoryGameMove } from '../../models/memory-game-move';
 import { environment } from '../../../environments/environment';
 
+
 @Component({
   selector: 'app-game',
   imports: [FormsModule, CommonModule],
@@ -237,6 +238,7 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Advertencia antes de abandonar la partida
   exit() {
     Swal.fire({
       title: "¿Estás seguro de que quieres abandonar la partida?",
@@ -259,7 +261,7 @@ export class GameComponent implements OnInit, OnDestroy {
     this.router.navigate(['/menu']);
   }
 
-  // Muestra el modal de final de partida
+  // Muestra el modal de finalización de partida
   showGameOverModal(): void {
     const history = this.gameOverData.Result;
 
@@ -317,14 +319,14 @@ export class GameComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  // Para el timer
+  // Parar el timer
   stopTurnTimer(): void {
     if (this.turnTimerInterval) {
       clearInterval(this.turnTimerInterval);
     }
   }
 
-  // Reinicia el timer
+  // Reiniciar el timer
   resetTurnTimer(): void {
     if (this.turnTimerInterval) {
       clearInterval(this.turnTimerInterval);
@@ -390,4 +392,5 @@ export class GameComponent implements OnInit, OnDestroy {
       this.cancelRequestRematch.unsubscribe();
     }
   }
+
 }

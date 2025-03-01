@@ -15,9 +15,9 @@ public class FriendRequestService
     private readonly IWebSocketMessageSender _webSocketMessageSender;
 
     public FriendRequestService(
-        UnitOfWork unitOfWork, 
-        UserMapper userMapper, 
-        FriendRequestMapper friendRequestMapper, 
+        UnitOfWork unitOfWork,
+        UserMapper userMapper,
+        FriendRequestMapper friendRequestMapper,
         WebSocketNotificationService webSocketNotificationService,
         IWebSocketMessageSender webSocketMessageSender)
     {
@@ -43,7 +43,7 @@ public class FriendRequestService
             {
                 throw new Exception("La solicitud ya fue aceptada.");
             }
-            else 
+            else
             {
                 throw new Exception("Ya existe una solicitud de amistad entre estos usuarios.");
             }

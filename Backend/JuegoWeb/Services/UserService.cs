@@ -3,7 +3,6 @@ using JuegoWeb.Models.Database;
 using JuegoWeb.Models.Database.Entities;
 using JuegoWeb.Models.Dtos;
 using JuegoWeb.Models.Mappers;
-using System.Runtime.CompilerServices;
 
 namespace JuegoWeb.Services;
 
@@ -191,7 +190,7 @@ public class UserService
         }
 
         await UpdateUser(existingUser);
-        Console.WriteLine("Usuario actualizado correctamente.", existingUser);
+        //Console.WriteLine("Usuario actualizado correctamente.", existingUser);
         await _unitOfWork.SaveAsync();
     }
 
@@ -235,7 +234,7 @@ public class UserService
             existingUser.IsBanned = false;
         }
 
-        Console.WriteLine($"Estado de la prohibición del usuario {existingUser.Nickname}: {isBanned}");
+        //Console.WriteLine($"Estado de la prohibición del usuario {existingUser.Nickname}: {isBanned}");
 
         await UpdateUser(existingUser);
         await _unitOfWork.SaveAsync();
@@ -261,7 +260,7 @@ public class UserService
         }
 
         await UpdateUser(existingUser);
-        Console.WriteLine("Usuario actualizado correctamente.", existingUser);
+        //Console.WriteLine("Usuario actualizado correctamente.", existingUser);
         await _unitOfWork.SaveAsync();
     }
 

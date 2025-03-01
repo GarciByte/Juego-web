@@ -71,7 +71,7 @@ namespace JuegoWeb.Controllers
                 return BadRequest("El usuario no fue encontrado.");
             }
 
-            Console.WriteLine($"Usuario autenticado: ID = {userData.UserId}, Nickname = {userData.Nickname}, Email = {userData.Email}");
+            //Console.WriteLine($"Usuario autenticado: ID = {userData.UserId}, Nickname = {userData.Nickname}, Email = {userData.Email}");
             modifyUserDto.UserId = userData.UserId;
 
             try
@@ -157,7 +157,7 @@ namespace JuegoWeb.Controllers
                 return BadRequest("El usuario no fue encontrado.");
             }
 
-            Console.WriteLine($"Usuario autenticado: ID = {userData.UserId}, Nickname = {userData.Nickname}, Email = {userData.Email}");
+            //Console.WriteLine($"Usuario autenticado: ID = {userData.UserId}, Nickname = {userData.Nickname}, Email = {userData.Email}");
 
             try
             {
@@ -194,7 +194,7 @@ namespace JuegoWeb.Controllers
             }
             catch (Exception)
             {
-                Console.WriteLine("La ID del usuario es null");
+                //Console.WriteLine("La ID del usuario es null");
                 return null;
             }
         }

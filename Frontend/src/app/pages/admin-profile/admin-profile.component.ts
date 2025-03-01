@@ -9,6 +9,7 @@ import Swal from 'sweetalert2';
 import { CommonModule } from '@angular/common';
 import { MsgType, WebSocketMessage } from '../../models/web-socket-message';
 
+
 @Component({
   selector: 'app-admin-profile',
   imports: [RouterModule, CommonModule],
@@ -83,12 +84,12 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
       if (result.success) {
 
       } else {
-        console.error("Error al modificar el rol:", result.error);
+        //console.error("Error al modificar el rol:", result.error);
         this.throwError("Se ha producido un error al modificar el rol del usuario");
       }
 
     } catch (error) {
-      console.error("Error al modificar el rol:", error);
+      //console.error("Error al modificar el rol:", error);
       this.throwError("Se ha producido un error al modificar el rol del usuario");
     }
 
@@ -138,12 +139,12 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
             }
 
           } else {
-            console.error("Error al modificar la prohibición:", result.error);
+            //console.error("Error al modificar la prohibición:", result.error);
             this.throwError("Se ha producido un error al modificar la prohibición del usuario");
           }
 
         } catch (error) {
-          console.error("Error al modificar la prohibición:", error);
+          //console.error("Error al modificar la prohibición:", error);
           this.throwError("Se ha producido un error al modificar la prohibición del usuario");
         }
 

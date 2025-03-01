@@ -42,7 +42,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
 
     public async Task HandleAsync(WebSocket webSocket, UserDto user)
     {
-        Console.WriteLine("Conexión establecida con " + user.Nickname);
+        //Console.WriteLine("Conexión establecida con " + user.Nickname);
 
         // Creamos un nuevo WebSocketHandler a partir del WebSocket recibido y lo añadimos a la lista
         WebSocketHandler handler = await AddWebSocketAsync(webSocket, user);
@@ -84,7 +84,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
             }
             else
             {
-                Console.WriteLine("El usuario ya tiene una conexión activa.");
+                //Console.WriteLine("El usuario ya tiene una conexión activa.");
                 return null;
             }
         }
@@ -221,7 +221,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
     // Desconexión de un usuario
     private async Task OnDisconnectedAsync(WebSocketHandler handler)
     {
-        Console.WriteLine($"Iniciando desconexión de {handler.User.Nickname}.");
+        //Console.WriteLine($"Iniciando desconexión de {handler.User.Nickname}.");
 
         await _semaphore.WaitAsync();
         try
@@ -286,7 +286,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
             // Notificar las estadísticas globales
             await NotifyStatsAsync();
 
-            Console.WriteLine($"Desconexión completada.");
+            //Console.WriteLine($"Desconexión completada.");
         }
     }
 
@@ -344,7 +344,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
                     break;
 
                 default:
-                    Console.WriteLine($"Mensaje no manejado: {message.Type}");
+                    //Console.WriteLine($"Mensaje no manejado: {message.Type}");
                     break;
             }
         }
@@ -361,7 +361,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
         {
             string jsonContent = message.Content.ToString();
             int userId = JsonSerializer.Deserialize<int>(jsonContent);
-            Console.WriteLine($"Se ha baneado al usuaio con ID: {userId}");
+            //Console.WriteLine($"Se ha baneado al usuaio con ID: {userId}");
 
             await SendToUserAsync(userId, new WebSocketMessage
             {
@@ -420,7 +420,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
     // Notificar la invitación a una partida
     private async Task GameInvitationAsync(WebSocketHandler handler, WebSocketMessage message)
     {
-        Console.WriteLine($"Invitación de partida enviada por {handler.User.Nickname}.");
+        //Console.WriteLine($"Invitación de partida enviada por {handler.User.Nickname}.");
         GameInvitationDto gameInvitation = null;
 
         try
@@ -434,7 +434,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
 
             if (existingGameInvitations.Count > 0)
             {
-                Console.WriteLine($"Hay invitaciones pendientes para este usuario.");
+                //Console.WriteLine($"Hay invitaciones pendientes para este usuario.");
                 await _webSocketNotificationService.NotifyCancelGameInvitationAsync(handler.Id, gameInvitation, this);
             }
             else
@@ -450,7 +450,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
                 {
                     _semaphore.Release();
                 }
-                Console.WriteLine($"Hay {_gameInvitations.Count} invitaciones pendientes.");
+                //Console.WriteLine($"Hay {_gameInvitations.Count} invitaciones pendientes.");
             }
         }
         catch (Exception ex)
@@ -463,7 +463,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
     // Notificar la cancelación de una invitación a una partida
     private async Task CancelGameInvitationAsync(WebSocketHandler handler, WebSocketMessage message)
     {
-        Console.WriteLine($"Cancelación de la invitación de partida enviada por {handler.User.Nickname}.");
+        //Console.WriteLine($"Cancelación de la invitación de partida enviada por {handler.User.Nickname}.");
         GameInvitationDto gameInvitation = null;
 
         try
@@ -491,7 +491,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
             {
                 _semaphore.Release();
             }
-            Console.WriteLine($"Aun quedan {_gameInvitations.Count} invitaciones pendientes.");
+            //Console.WriteLine($"Aun quedan {_gameInvitations.Count} invitaciones pendientes.");
         }
         catch (Exception ex)
         {
@@ -661,7 +661,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
                         {
                             _semaphore.Release();
                         }
-                        Console.WriteLine($"Quedan {_gameInvitations.Count} invitaciones pendientes.");
+                        //Console.WriteLine($"Quedan {_gameInvitations.Count} invitaciones pendientes.");
                     }
                     break;
 
@@ -733,7 +733,7 @@ public class WebSocketNetwork : IWebSocketMessageSender
                     break;
 
                 default:
-                    Console.WriteLine($"Acción de juego desconocida: {gameAction.Action}");
+                    //Console.WriteLine($"Acción de juego desconocida: {gameAction.Action}");
                     break;
             }
         }
