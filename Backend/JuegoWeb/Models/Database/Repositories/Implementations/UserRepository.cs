@@ -45,10 +45,4 @@ public class UserRepository : Repository<User, int>
             .Include(user => user.Avatar)
             .ToListAsync();
     }
-
-    // Eliminar usuario
-    public void DeleteUser(User user)
-    {
-        base.Delete(user);
-    }
 }

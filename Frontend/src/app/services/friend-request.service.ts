@@ -4,6 +4,7 @@ import { User } from '../models/user';
 import { ApiService } from './api.service';
 import { Result } from '../models/result';
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -45,4 +46,5 @@ export class FriendRequestService {
   async removeFriend(userId: number, friendId: number): Promise<Result<void>> {
     return this.api.delete<void>(`FriendRequest/remove-friend/${userId}/${friendId}`);
   }
+
 }

@@ -16,7 +16,6 @@ public class Seeder
     public async Task SeedAsync()
     {
         await SeedUsersAsync();
-
         await _context.SaveChangesAsync();
     }
 
@@ -36,14 +35,14 @@ public class Seeder
         var image11 = new Image { Name = "imagen11" + "_default", Path = "avatars/avatar.png" };
 
         await _context.Images.AddRangeAsync(
-            image1, 
-            image2, 
-            image3, 
-            image4, 
-            image5, 
-            image6, 
-            image7, 
-            image8, 
+            image1,
+            image2,
+            image3,
+            image4,
+            image5,
+            image6,
+            image7,
+            image8,
             image9,
             image10,
             image11
@@ -266,9 +265,9 @@ public class Seeder
         };
 
         await _context.FriendRequest.AddRangeAsync(
-            friendRequest_1, 
-            friendRequest_2, 
-            friendRequest_3, 
+            friendRequest_1,
+            friendRequest_2,
+            friendRequest_3,
             friendRequest_4,
             friendRequest_5
             );

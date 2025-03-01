@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import Swal from 'sweetalert2';
 import { WebsocketService } from '../../services/websocket.service';
 
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -94,4 +95,5 @@ export class LoginComponent implements OnInit {
       confirmButtonText: "Aceptar"
     });
   }
+
 }

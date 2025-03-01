@@ -48,7 +48,7 @@ public class GameRoomService
             _semaphore.Release();
         }
 
-        Console.WriteLine($"Salas activas: {_activeRooms.Count}.");
+        //Console.WriteLine($"Salas activas: {_activeRooms.Count}.");
     }
 
     // Crear una sala en la que se juega contra un bot
@@ -233,7 +233,7 @@ public class GameRoomService
             _semaphore.Release();
         }
 
-        Console.WriteLine($"Salas activas: {_activeRooms.Count}.");
+        //Console.WriteLine($"Salas activas: {_activeRooms.Count}.");
 
         // Notificar la actualización de la sala si sigue activa
         if (room != null && room.RoomType != GameRoomType.Bot && _activeRooms.Contains(room))

@@ -15,6 +15,7 @@ import { UserService } from '../../services/user.service';
 import { GameInvitation } from '../../models/game-invitation';
 import Swal from 'sweetalert2';
 
+
 @Component({
   selector: 'app-matchmaking',
   standalone: true,
@@ -23,6 +24,7 @@ import Swal from 'sweetalert2';
   styleUrl: './matchmaking.component.css',
 })
 export class MatchmakingComponent implements OnInit, OnDestroy {
+
   public readonly IMG_URL = environment.apiImg;
   user: User;
   friends: User[] = [];
@@ -92,8 +94,8 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
       });
     }
 
-     // Comprobar parámetros de ruta para saber si se accedió mediante una invitación
-     this.routeSubscription = this.route.queryParams.subscribe(async (params) => {
+    // Comprobar parámetros de ruta para saber si se accedió mediante una invitación
+    this.routeSubscription = this.route.queryParams.subscribe(async (params) => {
       if (params['userId']) {
         const userId = Number(params['userId']);
         await this.handleInvitation(userId);
@@ -134,10 +136,10 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
               this.isHost = true;
               this.hostPlayer = this.user;
 
-              const guestUserId = await this.userService.getUserById(room.GuestUserId);
+              const guestUser = await this.userService.getUserById(room.GuestUserId);
 
-              if (guestUserId.success) {
-                this.guestPlayer = guestUserId.data;
+              if (guestUser.success) {
+                this.guestPlayer = guestUser.data;
                 this.canStartGame = true;
 
               } else {
@@ -151,10 +153,10 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
               this.guestPlayer = this.user;
               this.guestPlayer.avatar.url = this.user.avatar.url;
 
-              const hostUserId = await this.userService.getUserById(room.HostUserId);
+              const hostUser = await this.userService.getUserById(room.HostUserId);
 
-              if (hostUserId.success) {
-                this.hostPlayer = hostUserId.data;
+              if (hostUser.success) {
+                this.hostPlayer = hostUser.data;
                 this.canStartGame = true;
 
               } else {
@@ -483,4 +485,5 @@ export class MatchmakingComponent implements OnInit, OnDestroy {
       confirmButtonText: "Aceptar"
     });
   }
+
 }

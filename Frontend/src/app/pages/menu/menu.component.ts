@@ -268,7 +268,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   // Carga las solicitudes de amistad enviadas
   async loadFriendRequestsSent(): Promise<void> {
     try {
-      const result= await this.friendRequestService.getPendingSentRequests(this.user.userId);
+      const result = await this.friendRequestService.getPendingSentRequests(this.user.userId);
       this.friendRequestsSent = result.data;
 
     } catch (error) {

@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
 import { FriendRequest } from '../../models/friend-request';
 import { FriendRequestService } from '../../services/friend-request.service';
 
+
 @Component({
   selector: 'app-friend-profile',
   imports: [RouterModule, CommonModule],
@@ -177,6 +178,7 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
           //console.error('Error al borrar el amigo:', error);
           this.throwError("Se ha producido un error al borrar el amigo");
         }
+        
       } else {
         Swal.close();
       }
